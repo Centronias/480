@@ -32,11 +32,13 @@ main(int			argc,
 // init()
 //
 // This method initialzes the analyzer for use. It pretty much just makes all
-// the states.
+// the states and calls the other class's init functions.
 // ****************************************************************************
 void
 Lexer::init()
 {
+	Token::init();
+
 	// Create the start state.
 	m_entryState = new State();
 
@@ -59,6 +61,14 @@ Lexer::init()
 
 // ****************************************************************************
 // run()
+//
+// This method implements the brains of the lexical analyzer. It reads one
+// character at a time from stdin and traverses the previously made state
+// machine based on those characters. After reading a character, there are
+// three possible outcomes:
+//	-	We advance to a new state
+//	-	We cannot advance and accept the characters we've read so far.
+//	-	We cannot advance and reject the characters we've read so far.
 // ****************************************************************************
 void
 Lexer::run()

@@ -28,6 +28,7 @@ class String {
 						operator const char*() {return m_data;} const;
 
 	String&				operator=(const String&	other);
+	String&				operator=(const char*	other);
 	bool				operator==(const String&	other) const;
 	bool				operator!=(const String&	other) const;
 	char&				operator[](const UINT	index) {return m_data[index];}

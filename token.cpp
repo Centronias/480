@@ -24,3 +24,25 @@ Token::Token(Token::Type	type,
 	m_spelling(spelling)
 {	
 }
+
+
+
+// ****************************************************************************
+// init()
+// ****************************************************************************
+void
+Token::init()
+{
+	m_typeNames[NONE]			= "INVALID TOKEN: NONE";
+	m_typeNames[LogicalOp]		= "LogicalOp";
+	m_typeNames[CompOp]			= "CompOp";
+	m_typeNames[ExpoOp]			= "ExpoOp";
+	m_typeNames[MultOp]			= "MultOp";
+	m_typeNames[AddOp]			= "AddOp";
+	m_typeNames[UnaryOp]		= "UnaryOp";
+	m_typeNames[AssgnOp]		= "AssgnOp";
+	m_typeNames[PrimType]		= "PrimType";
+	m_typeNames[Declarator]		= "Declarator";
+	m_typeNames[Conditional]	= "Conditional";
+	m_typeNames[Paren]			= "Paren";
+}

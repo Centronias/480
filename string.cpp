@@ -26,7 +26,7 @@ String::String()
 
 String::String(const char*	cBuf)
 {
-	m_data = new char[strlen(cBuf)];
+	m_data = new char[strlen(cBuf) + 1];
 	strcpy(m_data, other.m_data);
 }
 
@@ -52,10 +52,28 @@ String::operator=(const String&	other)
 		UINT	len = other.getLength();
 		delete [] m_data;
 
-		m_data = new char[len];
+		m_data = new char[len + 1];
 
 		strcpy(m_data, other.m_data);
 	}
+
+	return *this;
+}
+
+
+
+// ****************************************************************************
+// operator=()
+// ****************************************************************************
+String
+String::operator=(const char*	other)
+{
+	UINT	len = strlen(other);
+	delete [] m_data;
+
+	m_data = new char[len + 1];
+
+	strcpy(m_data, other);
 
 	return *this;
 }

@@ -20,8 +20,9 @@
 // State Class
 // ****************************************************************************
 class Token {
+  public:
 	enum Type {
-		None,
+		NONE,
 		LogicalOp,
 		CompOp,
 		ExpoOp,
@@ -32,16 +33,22 @@ class Token {
 		PrimType,
 		Declarator,
 		Conditional,
-		Paren
+		Paren,
+		END
 	}
 
-  public:
 						Token(Token::Type	type,
 							  const String	spelling);
+
+
+	static void				init();
+	static const String&	getTypeName(Type	type) {return m_typeNames[type];}
 
   private:
 	const String		m_spelling;
 	const Type			m_type;
+
+	static String		m_typeNames[Type::END];
 };
 
 
