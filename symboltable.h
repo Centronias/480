@@ -1,6 +1,6 @@
 // ****************************************************************************
 // ****************************************************************************
-// common.h
+// symbolTable.h
 // ****************************************************************************
 // 
 // ****************************************************************************
@@ -11,23 +11,39 @@
 // ****************************************************************************
 // Defines
 // ****************************************************************************
-#define UINT	unsigned int
-#define NULL	((void*) 0)
-#define BYTE	unsigned char
+#ifndef	H_SYMBOL_TABLE
+#define H_SYMBOL_TABLE
 
 
 
 // ****************************************************************************
-// Helper Includes
+// SymbolTable Class
 // ****************************************************************************
-#include "vector.h"
+class SymbolTable {
+	struct Bucket {
+		const String	m_key;
+		Token*			m_value;
+		Bucket*			m_next;
+	};
+  public:
+						SymbolTable();
+						~SymbolTable();
+
+	Token*				find(const String&	key);
+	void				insert(const String&	key,
+							   const Token*		value);
+	void				remove(const String&	key);
+
+
+  private:
+	static UINT			hash(const String&	key);
+
+	SymbolTable*		m_parent;
+	Bucket**			m_bucketList;
+
+	const static UINT	m_maxSize = 1 << 6;
+};
 
 
 
-// ****************************************************************************
-// Class Includes
-// ****************************************************************************
-#include "lexer.h"
-#include "symbolTable.h"
-#include "token.h"
-#include "state.h"
+#endif
