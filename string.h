@@ -21,20 +21,22 @@
 // ****************************************************************************
 class String {
   public:
-  						String();
+						String();
 						String(const char*	cBuf);
-						String(const String&	str);
 						~String();
 
-	String				operator=(const String&	other);
-	bool				operator==(const String&	other) const;
+						operator const char*() {return m_data;} const;
 
-	UINT				length() const;
+	String&				operator=(const String&	other);
+	bool				operator==(const String&	other) const;
+	bool				operator!=(const String&	other) const;
+	char&				operator[](const UINT	index) {return m_data[index];}
+
+	UINT				getLength() const	{return strlen(m_data);}
 
 
   private:
-  	UINT				m_length;
-  	char*				m_data;
+	char*				m_data;
 };
 
 

@@ -37,12 +37,11 @@ class Token {
 
   public:
 						Token(Token::Type	type,
-							  const char*	spelling);
-						~Token();
+							  const String	spelling);
 
   private:
-	char*				m_spelling;
-	Type				m_type;
+	const String		m_spelling;
+	const Type			m_type;
 };
 
 

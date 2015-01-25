@@ -16,10 +16,26 @@
 
 
 // ****************************************************************************
-// Token()
+// main()
+// ****************************************************************************
+int
+main(int			argc,
+	 const char*	argv[])
+{
+	Lexer::init();
+	Lexer::run();
+}
+
+
+
+// ****************************************************************************
+// init()
+//
+// This method initialzes the analyzer for use. It pretty much just makes all
+// the states.
 // ****************************************************************************
 void
-LexicalAnalyzer::init()
+Lexer::init()
 {
 	// Create the start state.
 	m_entryState = new State();
@@ -42,7 +58,69 @@ LexicalAnalyzer::init()
 
 
 // ****************************************************************************
-// LexicalAnalyzer::addIdentifiers()
+// run()
+// ****************************************************************************
+void
+Lexer::run()
+{
+	State*	curr = m_entryState;
+	State*	prev = NULL;
+	State*	next = NULL;
+	char	chr;
+
+	char	buf[1 << 7];
+	char*	bufLoc = buf;
+
+	Vector<Token>	tokens;
+
+	// Read input until there is no more input to be read.
+	while (getc(chr, stdin)) {
+		if (next = curr->transition(chr)) {
+			// If there is a transition from our current state with our current
+			// character, write the current character to the token buffer and
+			// advance to the next state.
+			*bufLoc++ = chr;
+
+			prev = curr;
+			curr = next;
+		} else {
+			// There is no transition from our current state with our current
+			// character. Check to see if our current state accepts.
+			if (curr->hasFinalization()) {
+				// If our current state accepts (and there is no transition for
+				// our current character), the previous character was the end
+				// of a token. Create the token from the character buffer and
+				// then reset the state machine and put the character back into
+				// stdin. This is our pushback implementation.
+				*bufLoc = '\0';
+				token.append(Token(curr->getFinalization(), buf));
+
+				curr = m_entryState;
+				prev = NULL;
+				bufLoc = buf;
+
+				ungetc(chr, stdin);
+			} else {
+				// If the current state does not accept (and there is no
+				// transition for our current character), the entire current
+				// token fragment is bad. We throw out the entire attempt,
+				// reset the state machine and put the character back into
+				// stdin. I am not sure when this would happen other than in
+				// invalid character is read.
+				curr = m_entryState;
+				prev = NULL;
+				bufLoc = buf;
+
+				ungetc(chr, stdin);
+			}
+		}
+	}
+}
+
+
+
+// ****************************************************************************
+// Lexer::addIdentifiers()
 //
 // This function adds states for handling identifiers. We do this with two
 // states, one raches from the start state and is either a letter or
@@ -51,7 +129,7 @@ LexicalAnalyzer::init()
 // alphabetical states below.
 // ****************************************************************************
 State*
-LexicalAnalyzer::addIdentifiers()
+Lexer::addIdentifiers()
 {
 	State*	startIdentifier	= new State();
 	State*	genIdentifier	= new State();
@@ -68,14 +146,14 @@ LexicalAnalyzer::addIdentifiers()
 
 
 // ****************************************************************************
-// LexicalAnalyzer::addLogicalOps()
+// Lexer::addLogicalOps()
 //
 // This function adds states for the following logical operator tokens:
 //	'and'
 //	'or'
 // ****************************************************************************
 void
-LexicalAnalyzer::addLogicalOps(State*	genIdentifier)
+Lexer::addLogicalOps(State*	genIdentifier)
 {
 	// Add 'and' states. Each of these states must also branch off to the
 	// generic identifier state.
@@ -111,7 +189,7 @@ LexicalAnalyzer::addLogicalOps(State*	genIdentifier)
 
 
 // ****************************************************************************
-// LexicalAnalyzer::addCompOps()
+// Lexer::addCompOps()
 //
 // This function adds states for the following comparison operator tokens:
 //	'>'
@@ -122,7 +200,7 @@ LexicalAnalyzer::addLogicalOps(State*	genIdentifier)
 //	'!='
 // ****************************************************************************
 void
-LexicalAnalyzer::addCompOps()
+Lexer::addCompOps()
 {
 	// Greater than '>' and greater than or equal to comparison ops.
 	State*	gt	= new State(Token::CompOp);
@@ -150,7 +228,7 @@ LexicalAnalyzer::addCompOps()
 
 
 // ****************************************************************************
-// LexicalAnalyzer::addMultiplicationOps()
+// Lexer::addMultiplicationOps()
 //
 // This function adds states for the following multiplication operator tokens:
 //	'*'
@@ -158,7 +236,7 @@ LexicalAnalyzer::addCompOps()
 //	'%'
 // ****************************************************************************
 void
-LexicalAnalyzer::addMultOps()
+Lexer::addMultOps()
 {
 	// Multiplication '*' multiplication op.
 	State*	mu = new State(Token::MultOp);
@@ -176,14 +254,14 @@ LexicalAnalyzer::addMultOps()
 
 
 // ****************************************************************************
-// LexicalAnalyzer::addAdditionOps()
+// Lexer::addAdditionOps()
 //
 // This function adds states for the following addition operator tokens:
 //	'+'
 //	'-'
 // ****************************************************************************
 void
-LexicalAnalyzer::addAddOps()
+Lexer::addAddOps()
 {
 	// Addition '*' addition op.
 	State*	add = new State(Token::AddOp);
@@ -197,7 +275,7 @@ LexicalAnalyzer::addAddOps()
 
 
 // ****************************************************************************
-// LexicalAnalyzer::addUnaryOps()
+// Lexer::addUnaryOps()
 //
 // This function adds states for the following unary operator tokens:
 //	'not'
@@ -207,7 +285,7 @@ LexicalAnalyzer::addAddOps()
 //	'stdout'
 // ****************************************************************************
 void
-LexicalAnalyzer::addUnaryOps(State*	genIdentifier)
+Lexer::addUnaryOps(State*	genIdentifier)
 {
 	// Add 'not' states. Each of these states must also branch off to the
 	// generic identifier state.
@@ -310,7 +388,7 @@ LexicalAnalyzer::addUnaryOps(State*	genIdentifier)
 
 
 // ****************************************************************************
-// LexicalAnalyzer::addTypes()
+// Lexer::addTypes()
 //
 // This function adds states for the following primitive type tokens:
 //	'int'
@@ -319,7 +397,7 @@ LexicalAnalyzer::addUnaryOps(State*	genIdentifier)
 //	'string'
 // ****************************************************************************
 void
-LexicalAnalyzer::addTypes(State*	genIdentifier)
+Lexer::addTypes(State*	genIdentifier)
 {
 	// Add 'int' states. Each of these states must also branch off to the
 	// generic identifier state.
@@ -413,14 +491,14 @@ LexicalAnalyzer::addTypes(State*	genIdentifier)
 
 
 // ****************************************************************************
-// LexicalAnalyzer::addConditionals()
+// Lexer::addConditionals()
 //
 // This function adds states for the following conditional tokens:
 //	'if'
 //	'while'
 // ****************************************************************************
 void
-LexicalAnalyzer::addConditionals(State*	genIdentifier)
+Lexer::addConditionals(State*	genIdentifier)
 {
 	// Add 'if' states. Each of these states must also branch off to the
 	// generic identifier state.
@@ -464,7 +542,7 @@ LexicalAnalyzer::addConditionals(State*	genIdentifier)
 
 
 // ****************************************************************************
-// LexicalAnalyzer::addOthers()
+// Lexer::addOthers()
 //
 // This function adds all of the other states for the token types not covered
 // in other methods.
@@ -474,7 +552,7 @@ LexicalAnalyzer::addConditionals(State*	genIdentifier)
 //							')'
 // ****************************************************************************
 void
-LexicalAnalyzer::addOthers(State*	genIdentifier)
+Lexer::addOthers(State*	genIdentifier)
 {
 	// Add exponentiation '^' exponentiation op.
 	State*	ex = new State(Token::ExpoOp);

@@ -17,11 +17,13 @@
 
 
 // ****************************************************************************
-// State Class
+// LexericalAnalyzer Class
 // ****************************************************************************
 class LexicalAnalyzer {
   public:
 	static void			init();
+
+	static void			run();
 
   private:
 	static void			addLogicalOps(State*	genIdentifier);
@@ -36,7 +38,6 @@ class LexicalAnalyzer {
 	static State*		addIdentifiers();
 
 	static State*		m_entryState;
-	static State*		m_currState;
 
 	static const char[]	m_idStarts	= "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	static const char[]	m_idMids	= "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"

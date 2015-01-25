@@ -19,7 +19,6 @@
 // State()
 // ****************************************************************************
 State::State()
-:	m_numTransitions(0)
 {
 	m_finalization = Token::None;
 }
@@ -31,7 +30,6 @@ State::State()
 // ****************************************************************************
 State::~State()
 {
-
 }
 
 
@@ -43,4 +41,32 @@ bool
 State::hasFinalization() const
 {
 	return m_finalization != Token::None;
+}
+
+
+
+// ****************************************************************************
+// addTransition()
+// ****************************************************************************
+bool
+State::addTransition(char	chr,
+					 State*	state)
+{
+	m_transitions.append({chr, state});
+}
+
+
+
+// ****************************************************************************
+// transition()
+// ****************************************************************************
+State*
+State::transition(char	chr)
+{
+	for (UINT i = 0; i < m_transitions.getNumEntries(); i++) {
+		if (m_transitions[i].m_char == chr)
+			return m_transitions[i].m_state;
+	}
+
+	return NULL;
 }

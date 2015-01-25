@@ -25,8 +25,8 @@ class Vector<T> {
 						~Vector<T>();
 
 	void				append(T&	element);
-	T&					operator[](UINT	index);
-	const T&			operator[](UINT	index) const;
+	T&					operator[](const UINT	index);
+	const T&			operator[](const UINT	index) const;
 	UINT				getNumEntries()	{return m_numEntries;}
 
   private:

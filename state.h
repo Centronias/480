@@ -29,13 +29,14 @@ class State {
 						State();
 						State(Token::Type);
 
+	const State*		transition(char	chr) const;
+
 	void				addTransition(char		chr,
 									  State*	state);
-	void				setFinalization(Token::Type	type);
+	void				setFinalization(Token::Type	type)	{m_finalization = type;}
 	bool				hasFinalization() const;
 
   private:
-	UINT				m_numTransitions;
 	Vector<Transition>	m_transitions;
 
 	Token::Type			m_finalization;

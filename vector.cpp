@@ -58,13 +58,13 @@ Vector<T>::append(T&	element)
 // get()
 // ****************************************************************************
 T&
-Vector<T>::operator[](UINT	index)
+Vector<T>::operator[](const UINT	index)
 {
 	return m_data[index];
 }
 
 const T&
-Vector<T>::operator[](UINT	index) const
+Vector<T>::operator[](const UINT	index) const
 {
 	return m_data[index];
 }

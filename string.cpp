@@ -1,6 +1,6 @@
 // ****************************************************************************
 // ****************************************************************************
-// symbolTable.cpp
+// String.cpp
 // ****************************************************************************
 // 
 // ****************************************************************************
@@ -16,116 +16,68 @@
 
 
 // ****************************************************************************
-// SymbolTable()
+// String()
 // ****************************************************************************
-SymbolTable::SymbolTable()
-:	m_parent(NULL)
+String::String()
 {
-	m_bucketList = Bucket*[m_maxSize];
-	for (UINT i = 0; i < m_maxSize; i++)
-		m_bucketList[i] = NULL;
+	m_data	= new char[1];
+	*m_data	= '\0';
+}
+
+String::String(const char*	cBuf)
+{
+	m_data = new char[strlen(cBuf)];
+	strcpy(m_data, other.m_data);
 }
 
 
 
 // ****************************************************************************
-// ~SymbolTable()
+// ~String()
 // ****************************************************************************
-SymbolTable::~SymbolTable()
+String::~String()
 {
+	delete [] m_data;
 }
 
 
 
 // ****************************************************************************
-// hash()
+// operator=()
 // ****************************************************************************
-UINT
-SymbolTable::hash(const String&	key)
+String
+String::operator=(const String&	other)
 {
-	UINT val = 2166136261;
+	if (this != &other) {
+		UINT	len = other.getLength();
+		delete [] m_data;
 
-	for (UINT i = 0; i < key.lengt(); i++)
-		val = val ^ key[i];
-		val = val * 16777619;
+		m_data = new char[len];
+
+		strcpy(m_data, other.m_data);
 	}
 
-	return val % m_maxSize;
+	return *this;
 }
 
 
 
 // ****************************************************************************
-// find()
+// operator==()
 // ****************************************************************************
-Token*
-SymbolTable::find(const String&	key)
+String
+String::operator==(const String&	other)
 {
-	Bucket*	bucket	= m_bucketList[hash(key)];
-
-	while (key == bucket->m_key != 0) {
-		bucket = bucket->m_next;
-		if (!bucket)
-			return NULL;
-	}
-
-	return bucket->m_value;
+	return strcmp(m_data, other.m_data) == 0;
 }
 
 
 
 // ****************************************************************************
-// insert()
-//
-// This method inserts this key / value pair in the hash table. It finds the
-// bucket for this key's hash. If there is no bucket yet at that location, we
-// simply create one. If there is already a bucket, we iterate through the
-// bucket chain until we reach the end and add a new bucket on there.
+// operator!=()
 // ****************************************************************************
-Token*
-SymbolTable::insert(const String&	key,
-					const Token*	value)
+String
+String::operator!=(const String&	other)
 {
-	Bucket*	bucket = m_bucketList[hash(key)];
-	if (bucket) {
-		while (bucket) {
-			bucket = bucket->m_next;
-			if (bucket->m_key == key)
-				throw 1;
-		}
-	}
-
-	bucket = new Bucket;
-	bucket->m_key = key;
-	bucket->m_value = value;
-	bucket->m_next = NULL;
-}
-
-
-
-// ****************************************************************************
-// remove()
-// ****************************************************************************
-void
-SymbolTable::remove(const String&	key)
-{
-	Bucket*	bucket = m_bucketList[hash(key)];
-	Bucket*	prev = NULL;
-
-	if (bucket) {
-		do {
-			if (bucket->m_key == key) {
-				if (prev) {
-					prev->m_next = bucket->m_next;
-					delete bucket;
-				} else {
-					prev = bucket->m_next;
-					delete bucket;
-					bucket = prev;
-				}
-				break;
-			}
-			prev = bucket;
-		} while (bucket = bucket->m_next)
-	}
+	return strcmp(m_data, other.m_data) != 0;
 }
