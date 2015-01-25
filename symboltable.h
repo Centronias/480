@@ -21,22 +21,26 @@
 // ****************************************************************************
 class SymbolTable {
 	struct Bucket {
-		const String	m_key;
-		Token*			m_value;
+		const comString	m_key;
+		Token			m_value;
 		Bucket*			m_next;
+
+						Bucket(const comString&	key,
+							   const Token&		value,
+							   Bucket*			next);
 	};
   public:
 						SymbolTable();
 						~SymbolTable();
 
-	Token*				find(const String&	key);
-	void				insert(const String&	key,
-							   const Token*		value);
-	void				remove(const String&	key);
+	Token*				find(const comString&	key);
+	void				insert(const comString&	key,
+							   const Token&		value);
+	void				remove(const comString&	key);
 
 
   private:
-	static UINT			hash(const String&	key);
+	static UINT			hash(const comString&	key);
 
 	SymbolTable*		m_parent;
 	Bucket**			m_bucketList;

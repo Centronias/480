@@ -11,9 +11,9 @@
 
 
 CCC = g++
-CCFLAGS = -Wall
-OBJS = lexer.o state.o string.o symboltable.o token.o vector.o
-SOURCE = lexer.cpp state.cpp string.cpp symboltable.cpp token.cpp vector.cpp
+CCFLAGS = -fmax-errors=10 -Wall -std=gnu++11
+OBJS = comString.o token.o symbolTable.o state.o lexer.o
+SOURCE = lexer.cpp state.cpp comString.cpp symboltable.cpp token.cpp
 RUNFLAGS =
 
 $(OBJS): $(SOURCE)

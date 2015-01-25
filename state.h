@@ -17,29 +17,36 @@
 
 
 // ****************************************************************************
+// Transition Struct
+// ****************************************************************************
+struct Transition {
+	char				m_char;
+	State*				m_state;
+};
+
+
+
+// ****************************************************************************
 // State Class
 // ****************************************************************************
 class State {
-	struct Transition {
-		char			m_char;
-		State*			m_state;
-	};
-
   public:
-						State();
-						State(Token::Type);
+							State();
+							State(Token::Type);
 
-	const State*		transition(char	chr) const;
+	const State*			transition(char	chr) const;
 
-	void				addTransition(char		chr,
-									  State*	state);
-	void				setFinalization(Token::Type	type)	{m_finalization = type;}
-	bool				hasFinalization() const;
+	void					addTransition(char		chr,
+										  State*	state);
+
+	Token::Type				getFinalization() const	{return m_finalization;}
+	void					setFinalization(Token::Type	type)	{m_finalization = type;}
+	bool					hasFinalization() const;
 
   private:
-	Vector<Transition>	m_transitions;
+	TransVec				m_transitions;
 
-	Token::Type			m_finalization;
+	Token::Type				m_finalization;
 };
 
 

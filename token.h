@@ -34,21 +34,22 @@ class Token {
 		Declarator,
 		Conditional,
 		Paren,
+		TypeName,
 		END
-	}
+	};
 
-						Token(Token::Type	type,
-							  const String	spelling);
+							Token(Token::Type		type,
+								  const comString&	spelling);
 
 
 	static void				init();
-	static const String&	getTypeName(Type	type) {return m_typeNames[type];}
+	static const comString&	getTypeName(Type	type) {return m_typeNames[type];}
 
   private:
-	const String		m_spelling;
-	const Type			m_type;
+	Type					m_type;
+	comString				m_spelling;
 
-	static String		m_typeNames[Type::END];
+	static comString		m_typeNames[Token::END];
 };
 
 

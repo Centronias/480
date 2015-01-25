@@ -1,6 +1,6 @@
 // ****************************************************************************
 // ****************************************************************************
-// common.h
+// comString.cpp
 // ****************************************************************************
 // 
 // ****************************************************************************
@@ -9,54 +9,93 @@
 
 
 // ****************************************************************************
-// External Includes
+// Includes
 // ****************************************************************************
-#include <stdio.h>
-#include <string.h>
-
-
-
-// ****************************************************************************
-// Defines
-// ****************************************************************************
-#define UINT	unsigned int
-#define BYTE	unsigned char
+#include "common.h"
 
 
 
 // ****************************************************************************
-// Forward Class Declarations
+// comString()
 // ****************************************************************************
-template <class T> class comVector;
-class comString;
-class SymbolTable;
-class Token;
-class State;
-class Lexer;
-struct Transition;
+comString::comString()
+{
+	m_data	= new char[1];
+	*m_data	= '\0';
+}
 
-
-
-// ****************************************************************************
-// Type Definitions
-// ****************************************************************************
-typedef comVector<Transition>	TransVec;
-typedef comVector<Token>		TokVec;
+comString::comString(const char*	cBuf)
+{
+	m_data = new char[strlen(cBuf) + 1];
+	strcpy(m_data, cBuf);
+}
 
 
 
 // ****************************************************************************
-// Helper Includes
+// ~comString()
 // ****************************************************************************
-#include "comVector.h"
-#include "comString.h"
+comString::~comString()
+{
+	delete [] m_data;
+}
 
 
 
 // ****************************************************************************
-// Class Includes
+// operator=()
 // ****************************************************************************
-#include "token.h"
-#include "symbolTable.h"
-#include "state.h"
-#include "lexer.h"
+comString&
+comString::operator=(const comString&	other)
+{
+	if (this != &other) {
+		UINT	len = other.getLength();
+		delete [] m_data;
+
+		m_data = new char[len + 1];
+
+		strcpy(m_data, other.m_data);
+	}
+
+	return *this;
+}
+
+
+
+// ****************************************************************************
+// operator=()
+// ****************************************************************************
+comString&
+comString::operator=(const char*	other)
+{
+	UINT	len = strlen(other);
+	delete [] m_data;
+
+	m_data = new char[len + 1];
+
+	strcpy(m_data, other);
+
+	return *this;
+}
+
+
+
+// ****************************************************************************
+// operator==()
+// ****************************************************************************
+bool
+comString::operator==(const comString&	other) const
+{
+	return strcmp(m_data, other.m_data) == 0;
+}
+
+
+
+// ****************************************************************************
+// operator!=()
+// ****************************************************************************
+bool
+comString::operator!=(const comString&	other) const
+{
+	return strcmp(m_data, other.m_data) != 0;
+}

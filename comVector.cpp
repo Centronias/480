@@ -1,6 +1,6 @@
 // ****************************************************************************
 // ****************************************************************************
-// String.cpp
+// comVector.cpp
 // ****************************************************************************
 // 
 // ****************************************************************************
@@ -16,26 +16,23 @@
 
 
 // ****************************************************************************
-// String()
+// comVector<T>()
 // ****************************************************************************
-String::String()
+template <class T>
+comVector<T>::comVector()
 {
-	m_data	= new char[1];
-	*m_data	= '\0';
-}
-
-String::String(const char*	cBuf)
-{
-	m_data = new char[strlen(cBuf) + 1];
-	strcpy(m_data, other.m_data);
+	m_data = new BYTE[sizeof(T)];
+	m_numEntries = 0;
+	m_size = 1;
 }
 
 
 
 // ****************************************************************************
-// ~String()
+// ~comVector<T>()
 // ****************************************************************************
-String::~String()
+template <class T>
+comVector<T>::~comVector()
 {
 	delete [] m_data;
 }
@@ -43,59 +40,36 @@ String::~String()
 
 
 // ****************************************************************************
-// operator=()
+// append()
 // ****************************************************************************
-String
-String::operator=(const String&	other)
+template <class T>
+void
+comVector<T>::append(const T&	element)
 {
-	if (this != &other) {
-		UINT	len = other.getLength();
-		delete [] m_data;
-
-		m_data = new char[len + 1];
-
-		strcpy(m_data, other.m_data);
+	if (m_numEntries == m_size) {
+		m_size++;
+		BYTE*	buf = new BYTE[sizeof(T) * m_size];
+		memcpy(buf, m_data, sizeof(T) * m_numEntries);
 	}
 
-	return *this;
+	m_data[m_numEntries] = element;
 }
 
 
 
 // ****************************************************************************
-// operator=()
+// operator[]()
 // ****************************************************************************
-String
-String::operator=(const char*	other)
+template <class T>
+T&
+comVector<T>::operator[](const UINT	index)
 {
-	UINT	len = strlen(other);
-	delete [] m_data;
-
-	m_data = new char[len + 1];
-
-	strcpy(m_data, other);
-
-	return *this;
+	return m_data[index];
 }
 
-
-
-// ****************************************************************************
-// operator==()
-// ****************************************************************************
-String
-String::operator==(const String&	other)
+template <class T>
+const T&
+comVector<T>::operator[](const UINT	index) const
 {
-	return strcmp(m_data, other.m_data) == 0;
-}
-
-
-
-// ****************************************************************************
-// operator!=()
-// ****************************************************************************
-String
-String::operator!=(const String&	other)
-{
-	return strcmp(m_data, other.m_data) != 0;
+	return m_data[index];
 }

@@ -1,6 +1,6 @@
 // ****************************************************************************
 // ****************************************************************************
-// vector.cpp
+// comVector.h
 // ****************************************************************************
 // 
 // ****************************************************************************
@@ -9,18 +9,42 @@
 
 
 // ****************************************************************************
-// Includes
+// Defines
 // ****************************************************************************
-#include "common.h"
+#ifndef	H_COM_VECTOR
+#define H_COM_VECTOR
 
 
 
 // ****************************************************************************
-// Vector<T>()
+// comVector<T> Class
 // ****************************************************************************
-Vector<T>::Vector<T>()
+template <class T>
+class comVector {
+  public:
+						comVector<T>();
+						~comVector<T>();
+
+	void				append(const T&	element);
+	T&					operator[](const UINT	index);
+	const T&			operator[](const UINT	index) const;
+	UINT				getNumEntries()	const {return m_numEntries;}
+
+  private:
+	UINT				m_numEntries;
+	UINT				m_size;
+	T*					m_data;
+};
+
+
+
+// ****************************************************************************
+// comVector<T>()
+// ****************************************************************************
+template <class T>
+comVector<T>::comVector()
 {
-	m_data = new BYTE[sizeof(T)];
+	m_data = (T*) new BYTE[sizeof(T)];
 	m_numEntries = 0;
 	m_size = 1;
 }
@@ -28,9 +52,10 @@ Vector<T>::Vector<T>()
 
 
 // ****************************************************************************
-// ~Vector<T>()
+// ~comVector<T>()
 // ****************************************************************************
-Vector<T>::~Vector<T>()
+template <class T>
+comVector<T>::~comVector()
 {
 	delete [] m_data;
 }
@@ -40,13 +65,15 @@ Vector<T>::~Vector<T>()
 // ****************************************************************************
 // append()
 // ****************************************************************************
+template <class T>
 void
-Vector<T>::append(T&	element)
+comVector<T>::append(const T&	element)
 {
 	if (m_numEntries == m_size) {
 		m_size++;
 		BYTE*	buf = new BYTE[sizeof(T) * m_size];
 		memcpy(buf, m_data, sizeof(T) * m_numEntries);
+		m_data = (T*) buf;
 	}
 
 	m_data[m_numEntries] = element;
@@ -55,16 +82,22 @@ Vector<T>::append(T&	element)
 
 
 // ****************************************************************************
-// get()
+// operator[]()
 // ****************************************************************************
+template <class T>
 T&
-Vector<T>::operator[](const UINT	index)
+comVector<T>::operator[](const UINT	index)
 {
 	return m_data[index];
 }
 
+template <class T>
 const T&
-Vector<T>::operator[](const UINT	index) const
+comVector<T>::operator[](const UINT	index) const
 {
 	return m_data[index];
 }
+
+
+
+#endif

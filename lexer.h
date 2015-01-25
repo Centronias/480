@@ -17,9 +17,9 @@
 
 
 // ****************************************************************************
-// LexericalAnalyzer Class
+// Lexer Class
 // ****************************************************************************
-class LexicalAnalyzer {
+class Lexer {
   public:
 	static void			init();
 
@@ -39,8 +39,8 @@ class LexicalAnalyzer {
 
 	static State*		m_entryState;
 
-	static const char[]	m_idStarts	= "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	static const char[]	m_idMids	= "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	static const char	m_idStarts[];
+	static const char	m_idMids[];
 };
 
 

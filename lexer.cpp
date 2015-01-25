@@ -16,6 +16,15 @@
 
 
 // ****************************************************************************
+// Static Member Initialization
+// ****************************************************************************
+const char	Lexer::m_idStarts[]	= "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const char	Lexer::m_idMids[]	= "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+State*		Lexer::m_entryState	= NULL;
+
+
+
+// ****************************************************************************
 // main()
 // ****************************************************************************
 int
@@ -44,7 +53,7 @@ Lexer::init()
 
 	// Create the "special purpose" identifier states which handle pretty much
 	// all alphanumeric characters.
-	State*	genIdentifier = addIdentifiers()
+	State*	genIdentifier = addIdentifiers();
 
 	// Add all of the other states.
 	addLogicalOps(genIdentifier);
@@ -73,26 +82,23 @@ Lexer::init()
 void
 Lexer::run()
 {
-	State*	curr = m_entryState;
-	State*	prev = NULL;
-	State*	next = NULL;
-	char	chr;
+	const State*	curr = m_entryState;
+	const State*	next = NULL;
+	char			chr;
 
 	char	buf[1 << 7];
 	char*	bufLoc = buf;
 
-	Vector<Token>	tokens;
+	TokVec	tokens;
 
 	// Read input until there is no more input to be read.
-	while (getc(chr, stdin)) {
-		if (next = curr->transition(chr)) {
+	while ((chr = getc(stdin)) != EOF) {
+		if ((next = curr->transition(chr)) != NULL) {
 			// If there is a transition from our current state with our current
 			// character, write the current character to the token buffer and
 			// advance to the next state.
-			*bufLoc++ = chr;
-
-			prev = curr;
-			curr = next;
+			*bufLoc++	= chr;
+			curr		= next;
 		} else {
 			// There is no transition from our current state with our current
 			// character. Check to see if our current state accepts.
@@ -103,11 +109,10 @@ Lexer::run()
 				// then reset the state machine and put the character back into
 				// stdin. This is our pushback implementation.
 				*bufLoc = '\0';
-				token.append(Token(curr->getFinalization(), buf));
+				tokens.append(Token(curr->getFinalization(), buf));
 
-				curr = m_entryState;
-				prev = NULL;
-				bufLoc = buf;
+				curr	= m_entryState;
+				bufLoc	= buf;
 
 				ungetc(chr, stdin);
 			} else {
@@ -117,9 +122,8 @@ Lexer::run()
 				// reset the state machine and put the character back into
 				// stdin. I am not sure when this would happen other than in
 				// invalid character is read.
-				curr = m_entryState;
-				prev = NULL;
-				bufLoc = buf;
+				curr	= m_entryState;
+				bufLoc	= buf;
 
 				ungetc(chr, stdin);
 			}
@@ -141,7 +145,6 @@ Lexer::run()
 State*
 Lexer::addIdentifiers()
 {
-	State*	startIdentifier	= new State();
 	State*	genIdentifier	= new State();
 
 	for (UINT i = 0; i < strlen(m_idStarts); i++)
@@ -225,7 +228,7 @@ Lexer::addCompOps()
 	lt->addTransition('=', lte);
 
 	// Equality '=' comparison op.
-	State	eq = new State(Token::CompOp);
+	State*	eq = new State(Token::CompOp);
 	m_entryState->addTransition('=', eq);
 
 	// Inequality '!=' comparison op.
@@ -321,8 +324,8 @@ Lexer::addUnaryOps(State*	genIdentifier)
 	State*	sin_s	= new State();
 
 	m_entryState->addTransition('s', sin_s);
-	not_s->addTransition('i', not_i);
-	not_i->addTransition('n', not_n);
+	sin_s->addTransition('i', sin_i);
+	sin_i->addTransition('n', sin_n);
 
 	for (UINT i = 0; i < strlen(m_idMids); i++)
 		sin_s->addTransition(m_idMids[i], genIdentifier);
@@ -338,8 +341,8 @@ Lexer::addUnaryOps(State*	genIdentifier)
 	State*	cos_c = new State();
 
 	m_entryState->addTransition('c', cos_c);
-	not_c->addTransition('o', cos_o);
-	not_o->addTransition('t', cos_s);
+	cos_c->addTransition('o', cos_o);
+	cos_o->addTransition('t', cos_s);
 
 	for (UINT i = 0; i < strlen(m_idMids); i++)
 		cos_c->addTransition(m_idMids[i], genIdentifier);
@@ -367,7 +370,7 @@ Lexer::addUnaryOps(State*	genIdentifier)
 
 	// Add 'stdout' states. Each of these states must also branch off to the
 	// generic identifier state.
-	State*	stdout_t = new State(Token::UnaryOp);
+	State*	stdout_2 = new State(Token::UnaryOp);
 	State*	stdout_u = new State();
 	State*	stdout_o = new State();
 	State*	stdout_d = new State();
@@ -379,7 +382,7 @@ Lexer::addUnaryOps(State*	genIdentifier)
 	stdout_t->addTransition('d', stdout_d);
 	stdout_d->addTransition('o', stdout_o);
 	stdout_o->addTransition('u', stdout_u);
-	stdout_u->addTransition('t', stdout_t);
+	stdout_u->addTransition('t', stdout_2);
 
 	for (UINT i = 0; i < strlen(m_idMids); i++)
 		stdout_s->addTransition(m_idMids[i], genIdentifier);
@@ -392,7 +395,7 @@ Lexer::addUnaryOps(State*	genIdentifier)
 	for (UINT i = 0; i < strlen(m_idMids); i++)
 		stdout_u->addTransition(m_idMids[i], genIdentifier);
 	for (UINT i = 0; i < strlen(m_idMids); i++)
-		stdout_t->addTransition(m_idMids[i], genIdentifier);
+		stdout_2->addTransition(m_idMids[i], genIdentifier);
 }
 
 
@@ -411,7 +414,7 @@ Lexer::addTypes(State*	genIdentifier)
 {
 	// Add 'int' states. Each of these states must also branch off to the
 	// generic identifier state.
-	State*	int_t = new State(Token::Type);
+	State*	int_t = new State(Token::TypeName);
 	State*	int_n = new State();
 	State*	int_i = new State();
 
@@ -428,7 +431,7 @@ Lexer::addTypes(State*	genIdentifier)
 
 	// Add 'bool' states. Each of these states must also branch off to the
 	// generic identifier state.
-	State*	bool_l = new State(Token::Type);
+	State*	bool_l = new State(Token::TypeName);
 	State*	bool_2 = new State();
 	State*	bool_o = new State();
 	State*	bool_b = new State();
@@ -449,7 +452,7 @@ Lexer::addTypes(State*	genIdentifier)
 
 	// Add 'real' states. Each of these states must also branch off to the
 	// generic identifier state.
-	State*	real_l = new State(Token::Type);
+	State*	real_l = new State(Token::TypeName);
 	State*	real_a = new State();
 	State*	real_e = new State();
 	State*	real_r = new State();
@@ -470,7 +473,7 @@ Lexer::addTypes(State*	genIdentifier)
 
 	// Add 'string' states. Each of these states must also branch off to the
 	// generic identifier state.
-	State*	string_g = new State(Token::Type);
+	State*	string_g = new State(Token::TypeName);
 	State*	string_n = new State();
 	State*	string_i = new State();
 	State*	string_r = new State();

@@ -21,7 +21,7 @@
 SymbolTable::SymbolTable()
 :	m_parent(NULL)
 {
-	m_bucketList = Bucket*[m_maxSize];
+	m_bucketList = new Bucket*[m_maxSize];
 	for (UINT i = 0; i < m_maxSize; i++)
 		m_bucketList[i] = NULL;
 }
@@ -33,6 +33,17 @@ SymbolTable::SymbolTable()
 // ****************************************************************************
 SymbolTable::~SymbolTable()
 {
+	for (UINT i = 0; i < m_maxSize; i++) {
+		Bucket*	n = m_bucketList[i];
+		Bucket*	b;
+
+		while ((b = n) != NULL) {
+			n = b->m_next;
+			delete b;
+		}
+	}
+
+	delete [] m_bucketList;
 }
 
 
@@ -41,11 +52,11 @@ SymbolTable::~SymbolTable()
 // hash()
 // ****************************************************************************
 UINT
-SymbolTable::hash(const String&	key)
+SymbolTable::hash(const comString&	key)
 {
 	UINT val = 2166136261;
 
-	for (UINT i = 0; i < key.lengt(); i++)
+	for (UINT i = 0; i < key.getLength(); i++) {
 		val = val ^ key[i];
 		val = val * 16777619;
 	}
@@ -59,17 +70,17 @@ SymbolTable::hash(const String&	key)
 // find()
 // ****************************************************************************
 Token*
-SymbolTable::find(const String&	key)
+SymbolTable::find(const comString&	key)
 {
 	Bucket*	bucket	= m_bucketList[hash(key)];
 
-	while (key == bucket->m_key != 0) {
+	while (key != bucket->m_key) {
 		bucket = bucket->m_next;
 		if (!bucket)
 			return NULL;
 	}
 
-	return bucket->m_value;
+	return &(bucket->m_value);
 }
 
 
@@ -82,9 +93,9 @@ SymbolTable::find(const String&	key)
 // simply create one. If there is already a bucket, we iterate through the
 // bucket chain until we reach the end and add a new bucket on there.
 // ****************************************************************************
-Token*
-SymbolTable::insert(const String&	key,
-					const Token*	value)
+void
+SymbolTable::insert(const comString&	key,
+					const Token&		value)
 {
 	Bucket*	bucket = m_bucketList[hash(key)];
 	if (bucket) {
@@ -95,10 +106,7 @@ SymbolTable::insert(const String&	key,
 		}
 	}
 
-	bucket = new Bucket;
-	bucket->m_key = key;
-	bucket->m_value = value;
-	bucket->m_next = NULL;
+	bucket = new Bucket(key, value, NULL);
 }
 
 
@@ -107,7 +115,7 @@ SymbolTable::insert(const String&	key,
 // remove()
 // ****************************************************************************
 void
-SymbolTable::remove(const String&	key)
+SymbolTable::remove(const comString&	key)
 {
 	Bucket*	bucket = m_bucketList[hash(key)];
 	Bucket*	prev = NULL;
@@ -126,6 +134,21 @@ SymbolTable::remove(const String&	key)
 				break;
 			}
 			prev = bucket;
-		} while (bucket = bucket->m_next)
+		} while ((bucket = bucket->m_next) != NULL);
 	}
+}
+
+
+
+// ****************************************************************************
+// Bucket()
+// ****************************************************************************
+SymbolTable::Bucket::Bucket(const comString&	key,
+							const Token&		value,
+							Bucket*				next)
+:	m_key(key),
+	m_value(value),
+	m_next(next)
+{
+
 }

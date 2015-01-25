@@ -1,6 +1,6 @@
 // ****************************************************************************
 // ****************************************************************************
-// string.h
+// comString.h
 // ****************************************************************************
 // 
 // ****************************************************************************
@@ -11,26 +11,26 @@
 // ****************************************************************************
 // Defines
 // ****************************************************************************
-#ifndef	H_STRING
-#define H_STRING
+#ifndef	H_COM_STRING
+#define H_COM_STRING
 
 
 
 // ****************************************************************************
-// String Class
+// comString Class
 // ****************************************************************************
-class String {
+class comString {
   public:
-						String();
-						String(const char*	cBuf);
-						~String();
+						comString();
+						comString(const char*	cBuf);
+						~comString();
 
-						operator const char*() {return m_data;} const;
+						operator const char*() const	{return m_data;};
 
-	String&				operator=(const String&	other);
-	String&				operator=(const char*	other);
-	bool				operator==(const String&	other) const;
-	bool				operator!=(const String&	other) const;
+	comString&			operator=(const comString&	other);
+	comString&			operator=(const char*	other);
+	bool				operator==(const comString&	other) const;
+	bool				operator!=(const comString&	other) const;
 	char&				operator[](const UINT	index) {return m_data[index];}
 
 	UINT				getLength() const	{return strlen(m_data);}
