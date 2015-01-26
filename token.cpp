@@ -26,10 +26,12 @@ comString	Token::m_typeNames[];
 // Token()
 // ****************************************************************************
 Token::Token(Token::Type		type,
-			 const comString&	spelling)
+			 const comString&	spelling,
+			 UINT				line)
 :	m_type(type),
-	m_spelling(spelling)
-{	
+	m_spelling(spelling),
+	m_line(line)
+{
 }
 
 

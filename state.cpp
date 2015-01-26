@@ -48,7 +48,7 @@ void
 State::addTransition(char	chr,
 					 State*	state)
 {
-	m_transitions.append({chr, state});
+	m_transitions.append(new Transition(chr, state));
 }
 
 
@@ -60,9 +60,21 @@ const State*
 State::transition(char	chr) const
 {
 	for (UINT i = 0; i < m_transitions.getNumEntries(); i++) {
-		if (m_transitions[i].m_char == chr)
-			return m_transitions[i].m_state;
+		if (m_transitions[i]->m_char == chr)
+			return m_transitions[i]->m_state;
 	}
 
 	return NULL;
+}
+
+
+
+// ****************************************************************************
+// Transition()
+// ****************************************************************************
+Transition::Transition(char		chr,
+					   State*	state)
+:	m_char(chr),
+	m_state(state)
+{
 }

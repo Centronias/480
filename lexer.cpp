@@ -31,8 +31,12 @@ int
 main(int			argc,
 	 const char*	argv[])
 {
+	printf("Running lexer.exe\n\n");
+
 	Lexer::init();
 	Lexer::run();
+
+	printf("\n\nExiting lexer.exe\n");
 }
 
 
@@ -46,24 +50,29 @@ main(int			argc,
 void
 Lexer::init()
 {
+	printf("Initializing lexer.\n");
+
 	Token::init();
 
 	// Create the start state.
 	m_entryState = new State();
 
+	State*	test = new State(Token::UnaryOp);
+	m_entryState->addTransition('a', test);
+
 	// Create the "special purpose" identifier states which handle pretty much
 	// all alphanumeric characters.
-	State*	genIdentifier = addIdentifiers();
+//	State*	genIdentifier = addIdentifiers();
 
 	// Add all of the other states.
-	addLogicalOps(genIdentifier);
-	addCompOps();
-	addMultOps();
-	addAddOps();
-	addUnaryOps(genIdentifier);
-	addTypes(genIdentifier);
-	addConditionals(genIdentifier);
-	addOthers(genIdentifier);
+//	addLogicalOps(genIdentifier);
+//	addCompOps();
+//	addMultOps();
+//	addAddOps();
+//	addUnaryOps(genIdentifier);
+//	addTypes(genIdentifier);
+//	addConditionals(genIdentifier);
+//	addOthers(genIdentifier);
 }
 
 
@@ -82,9 +91,12 @@ Lexer::init()
 void
 Lexer::run()
 {
+	printf("Running lexer.\n");
+
 	const State*	curr = m_entryState;
 	const State*	next = NULL;
-	char			chr;
+	int				chr;
+	UINT			lineNum = 0;
 
 	char	buf[1 << 7];
 	char*	bufLoc = buf;
@@ -92,12 +104,15 @@ Lexer::run()
 	TokVec	tokens;
 
 	// Read input until there is no more input to be read.
-	while ((chr = getc(stdin)) != EOF) {
-		if ((next = curr->transition(chr)) != NULL) {
+	while (true) {
+		chr = getchar();
+
+		next = curr->transition((char) chr);
+		if (next != NULL) {
 			// If there is a transition from our current state with our current
 			// character, write the current character to the token buffer and
 			// advance to the next state.
-			*bufLoc++	= chr;
+			*bufLoc++	= (char) chr;
 			curr		= next;
 		} else {
 			// There is no transition from our current state with our current
@@ -109,25 +124,51 @@ Lexer::run()
 				// then reset the state machine and put the character back into
 				// stdin. This is our pushback implementation.
 				*bufLoc = '\0';
-				tokens.append(Token(curr->getFinalization(), buf));
+				tokens.append(new Token(curr->getFinalization(), buf, lineNum));
+
 
 				curr	= m_entryState;
 				bufLoc	= buf;
-
 				ungetc(chr, stdin);
 			} else {
 				// If the current state does not accept (and there is no
 				// transition for our current character), the entire current
-				// token fragment is bad. We throw out the entire attempt,
-				// reset the state machine and put the character back into
-				// stdin. I am not sure when this would happen other than in
-				// invalid character is read.
-				curr	= m_entryState;
-				bufLoc	= buf;
+				// token fragment is bad. We reset the state machine to the
+				// entry state.
 
-				ungetc(chr, stdin);
+				if (bufLoc != buf) {
+					// If the current token has characters in this, the current
+					// character may be the start of a good token and we put it
+					// back into stdin.
+					bufLoc	= buf;
+					ungetc(chr, stdin);
+				} else if (chr == '\n') {
+					// If we are dealing with a newline here, increment the
+					// line number.
+					lineNum++;
+				}
+
+				curr	= m_entryState;
 			}
 		}
+
+		// If the last read character was the end of the input, stop parsing.
+		if (chr == EOF)
+			break;
+	}
+
+	printf("Done parsing.\nOutputting tokens:\n");
+
+	UINT	printL = 0;
+	for (UINT i = 0; i < tokens.getNumEntries(); i++) {
+		while (printL < tokens[i]->getLine()) {
+			printf("\n");
+			printL++;
+		}
+
+		printf("(%s : \"%s\")",
+			   (const char*) Token::getTypeName(tokens[i]->getType()),
+			   (const char*) tokens[i]->getSpelling());
 	}
 }
 

@@ -20,8 +20,11 @@
 // Transition Struct
 // ****************************************************************************
 struct Transition {
-	char				m_char;
-	State*				m_state;
+	char					m_char;
+	State*					m_state;
+
+							Transition(char		chr,
+									   State*	state);
 };
 
 

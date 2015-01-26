@@ -73,10 +73,11 @@ comVector<T>::append(const T&	element)
 		m_size++;
 		BYTE*	buf = new BYTE[sizeof(T) * m_size];
 		memcpy(buf, m_data, sizeof(T) * m_numEntries);
+		delete [] m_data;
 		m_data = (T*) buf;
 	}
 
-	m_data[m_numEntries] = element;
+	m_data[m_numEntries++] = element;
 }
 
 

@@ -40,8 +40,8 @@ struct Transition;
 // ****************************************************************************
 // Type Definitions
 // ****************************************************************************
-typedef comVector<Transition>	TransVec;
-typedef comVector<Token>		TokVec;
+typedef comVector<Transition*>	TransVec;
+typedef comVector<Token*>		TokVec;
 
 
 

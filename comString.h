@@ -22,6 +22,7 @@
 class comString {
   public:
 						comString();
+						comString(const comString&	other);
 						comString(const char*	cBuf);
 						~comString();
 
@@ -38,6 +39,8 @@ class comString {
 
   private:
 	char*				m_data;
+
+friend class Token;
 };
 
 

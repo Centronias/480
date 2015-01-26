@@ -24,6 +24,12 @@ comString::comString()
 	*m_data	= '\0';
 }
 
+comString::comString(const comString&	other)
+{
+	m_data = new char[other.getLength() + 1];
+	strcpy(m_data, other.m_data);
+}
+
 comString::comString(const char*	cBuf)
 {
 	m_data = new char[strlen(cBuf) + 1];
