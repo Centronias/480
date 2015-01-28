@@ -89,7 +89,7 @@ Lexer::readCmdLine(int		argc,
 	}
 
 	if (!m_dumpFSA && (argv[optind] == NULL)) {
-		fprintf(stderr, "Usage: compiler <input file>\n");
+		fprintf(stderr, "Usage:\n\tcompiler <input file>\n\tcompiler -x\t\t(Dumps the FSA)\n");
 		exit(EXIT_FAILURE);
 	}
 
