@@ -30,6 +30,7 @@ State::State(const comString&	name)
 	m_num(m_nID++),
 	m_name(name)
 {
+	m_states.append(this);
 }
 
 State::State(const comString&	name,
@@ -38,6 +39,7 @@ State::State(const comString&	name,
 	m_num(m_nID++),
 	m_name(name)
 {
+	m_states.append(this);
 }
 
 
@@ -89,4 +91,32 @@ Transition::Transition(char		chr,
 :	m_char(chr),
 	m_state(state)
 {
+}
+
+
+
+// ****************************************************************************
+// State::dumpFSA()
+//
+// This method prints out the states and their transition which compose the FSA
+// constructed for the lexer.
+// ****************************************************************************
+void
+State::dumpFSA()
+{
+	FILE*	file = fopen("FSAdump.out", "w");
+
+	for (UINT i = 0; i < m_transitions.getNumEntries(); i++) {
+		State*	state = m_transitions[i];
+
+		fprintf(file, "\"%s\" (%d):\n", (const char*) state->m_name, state->m_num);
+
+		if (state->hasFinalization())
+			fprintf(file, "  F: %s\n", state->m_finalization);
+
+		for (UINT j = 0; j < state->m_transitions[j]; j++) {
+			Transition*	t = state->m_transitions[j];
+			fprintf(file, "\t-'%c'-> %s \"%s\" (%d)", t->m_char, (const char*) t->m_state->m_name, t->m_state->m_num);
+		}
+	}
 }

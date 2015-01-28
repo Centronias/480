@@ -47,6 +47,7 @@ class Lexer {
 	static const char	m_numerals[];
 
 	static bool			m_debug;
+	static bool			m_dumpFSA;
 };
 
 

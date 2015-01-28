@@ -47,13 +47,16 @@ class State {
 	void					setFinalization(Token::Type	type)	{m_finalization = type;}
 	bool					hasFinalization() const;
 
+	static void				dumpFSA();
+
   private:
 	TransVec				m_transitions;
 	Token::Type				m_finalization;
 	UINT					m_num;
 	const comString			m_name;
 
-	static UINT				m_nID;
+	static UINT					m_nID;
+	static comVector<State*>	m_states;
 };
 
 

@@ -24,6 +24,7 @@ const char	Lexer::m_stringChars[]	= "`1234567890-=~!@#$%^&*()_+qwertyuiop[]QWERT
 const char	Lexer::m_numerals[]		= "1234567890";
 State*		Lexer::m_entryState		= NULL;
 bool		Lexer::m_debug			= false;
+bool		Lexer::m_dumpFSA		= false;
 
 
 
@@ -40,6 +41,10 @@ main(int	argc,
 
 	Lexer::readCmdLine(argc, argv, input);
 	Lexer::init();
+
+	if (Lexer::m_dumpFSA)
+		State::dumpFSA();
+
 	Lexer::run(comString(input));
 
 	printf("\n\nExiting lexer.exe\n");
@@ -61,11 +66,13 @@ Lexer::readCmdLine(int		argc,
 	opterr = 0;
 
 	char c;
-	while ( (c = getopt(argc, argv, "d")) != -1 ) {
+	while ( (c = getopt(argc, argv, "dx")) != -1 ) {
 		switch (c) {
 		  case 'd':
 			m_debug = true;
-			fprintf(stderr, "\t\t\tDEBUGGING ON\n");
+			break;
+		  case 'x':
+			m_dumpFSA = true;
 			break;
 		  case '?':
 			if (optopt == 'c')
