@@ -1,0 +1,10 @@
+Running lexer.exe
+
+Initializing lexer.
+Running lexer.
+Failed to match token fragment ":" on line 1.
+Done parsing.
+Outputting tokens:
+
+
+Exiting lexer.exe

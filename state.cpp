@@ -16,15 +16,27 @@
 
 
 // ****************************************************************************
+// Static Member Initialization
+// ****************************************************************************
+UINT	State::m_nID = 0;
+
+
+
+// ****************************************************************************
 // State()
 // ****************************************************************************
-State::State()
-:	m_finalization(Token::NONE)
+State::State(const comString&	name)
+:	m_finalization(Token::NONE),
+	m_num(m_nID++),
+	m_name(name)
 {
 }
 
-State::State(Token::Type	type)
-:	m_finalization(type)
+State::State(const comString&	name,
+			 Token::Type		type)
+:	m_finalization(type),
+	m_num(m_nID++),
+	m_name(name)
 {
 }
 

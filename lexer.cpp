@@ -18,9 +18,12 @@
 // ****************************************************************************
 // Static Member Initialization
 // ****************************************************************************
-const char	Lexer::m_idStarts[]	= "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const char	Lexer::m_idMids[]	= "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-State*		Lexer::m_entryState	= NULL;
+const char	Lexer::m_idStarts[]		= "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const char	Lexer::m_idMids[]		= "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const char	Lexer::m_stringChars[]	= "`1234567890-=~!@#$%^&*()_+qwertyuiop[]QWERTYUIOP{}|asdfghjkl;ASDFGHJKL:zxcvbnm,./ZXCVBNM<>?\'";
+const char	Lexer::m_numerals[]		= "1234567890";
+State*		Lexer::m_entryState		= NULL;
+bool		Lexer::m_debug			= false;
 
 
 
@@ -28,15 +31,61 @@ State*		Lexer::m_entryState	= NULL;
 // main()
 // ****************************************************************************
 int
-main(int			argc,
-	 const char*	argv[])
+main(int	argc,
+	 char**	argv)
 {
 	printf("Running lexer.exe\n\n");
 
+	char	input[PATH_MAX];
+
+	Lexer::readCmdLine(argc, argv, input);
 	Lexer::init();
-	Lexer::run();
+	Lexer::run(comString(input));
 
 	printf("\n\nExiting lexer.exe\n");
+}
+
+
+
+// ************************************************************************************************
+// readCmdLine()
+//
+// This method reads the command line arguments to get the input file. If the input file is
+// missing, we print the proper usage and then exit.
+// ************************************************************************************************
+void
+Lexer::readCmdLine(int		argc,
+				   char**	argv,
+				   char*	inFile)
+{
+	opterr = 0;
+
+	char c;
+	while ( (c = getopt(argc, argv, "d")) != -1 ) {
+		switch (c) {
+		  case 'd':
+			m_debug = true;
+			fprintf(stderr, "\t\t\tDEBUGGING ON\n");
+			break;
+		  case '?':
+			if (optopt == 'c')
+				fprintf(stderr, "Option -%c requires an argument.\n", optopt);
+			else if (isprint(optopt))
+				fprintf(stderr, "Unknown option '-%c'.\n", optopt);
+			else
+				fprintf(stderr, "Unknown option character '\\x%x'.\n", optopt);
+			exit(EXIT_FAILURE);
+		  default:
+		  	exit(2);
+		}
+	}
+
+	if (argv[optind] == NULL) {
+		fprintf(stderr, "Usage: compiler <input file>\n");
+		exit(EXIT_FAILURE);
+	}
+	
+	strncpy(inFile, argv[optind], PATH_MAX);
 }
 
 
@@ -57,22 +106,15 @@ Lexer::init()
 	// Create the start state.
 	m_entryState = new State();
 
-	State*	test = new State(Token::UnaryOp);
-	m_entryState->addTransition('a', test);
-
-	// Create the "special purpose" identifier states which handle pretty much
-	// all alphanumeric characters.
-//	State*	genIdentifier = addIdentifiers();
-
-	// Add all of the other states.
-//	addLogicalOps(genIdentifier);
-//	addCompOps();
-//	addMultOps();
-//	addAddOps();
-//	addUnaryOps(genIdentifier);
-//	addTypes(genIdentifier);
-//	addConditionals(genIdentifier);
-//	addOthers(genIdentifier);
+	// Create and link the states of the lexer state machine. All alphanumeric
+	// keywords are handled as a special case of identifiers.
+	addIdentifiers();
+	addCompOps();
+	addMultOps();
+	addAddOps();
+	addOthers();
+	addStringConsts();
+	addNumericConsts();
 }
 
 
@@ -89,14 +131,22 @@ Lexer::init()
 //	-	We cannot advance and reject the characters we've read so far.
 // ****************************************************************************
 void
-Lexer::run()
+Lexer::run(const comString&	input)
 {
 	printf("Running lexer.\n");
+
+	FILE*	file = fopen(input, "r");
+
+	if (!file) {
+		fprintf(stderr, "Input file \"%s\" failed to open.\n", (const char*) input);
+		exit(EXIT_FAILURE);
+	}
+		
 
 	const State*	curr = m_entryState;
 	const State*	next = NULL;
 	int				chr;
-	UINT			lineNum = 0;
+	UINT			lineNum = 1;
 
 	char	buf[1 << 7];
 	char*	bufLoc = buf;
@@ -105,7 +155,7 @@ Lexer::run()
 
 	// Read input until there is no more input to be read.
 	while (true) {
-		chr = getchar();
+		chr = fgetc(file);
 
 		next = curr->transition((char) chr);
 		if (next != NULL) {
@@ -124,7 +174,15 @@ Lexer::run()
 				// then reset the state machine and put the character back into
 				// stdin. This is our pushback implementation.
 				*bufLoc = '\0';
-				tokens.append(new Token(curr->getFinalization(), buf, lineNum));
+
+				Token::Type	type = curr->getFinalization();
+				if (type == Token::Identifier) {
+					// If this came through the state machine as an identifier,
+					// check if it is a keyword.
+					type = checkKeyword(buf);
+				}
+
+				tokens.append(new Token(type, buf, lineNum));
 
 
 				curr	= m_entryState;
@@ -137,18 +195,34 @@ Lexer::run()
 				// entry state.
 
 				if (bufLoc != buf) {
-					// If the current token has characters in this, the current
-					// character may be the start of a good token and we put it
-					// back into stdin.
+					// If the current token has characters in the buffer, the
+					// current character may be the start of a good token so we
+					// put it back into stdin. Before we reset the buffer,
+					// though, we print an error stating that the token was not
+					// recognized.
+					ungetc(chr, file);
+
+					*bufLoc = '\0';
+					printf("Failed to match token fragment \"%s\" on line %d.\n", buf, lineNum);
+
 					bufLoc	= buf;
-					ungetc(chr, stdin);
-				} else if (chr == '\n') {
-					// If we are dealing with a newline here, increment the
-					// line number.
-					lineNum++;
+				} else if (chr != EOF) {
+					// There are no characters in the buffer and we did not
+					// recognize the current character. We throw it out and if
+					// it was non-whitespace, we report it as an error.
+					switch (chr) {
+					  case '\n':
+						lineNum++;
+					  case ' ':
+					  case '\r':
+					  case '\t':
+						break;
+					  default:
+						printf("Failed to match start of token with '%c' on line %d.\n", chr, lineNum);
+					}
 				}
 
-				curr	= m_entryState;
+				curr = m_entryState;
 			}
 		}
 
@@ -186,7 +260,7 @@ Lexer::run()
 State*
 Lexer::addIdentifiers()
 {
-	State*	genIdentifier	= new State();
+	State*	genIdentifier	= new State("genIdentifier", Token::Identifier);
 
 	for (UINT i = 0; i < strlen(m_idStarts); i++)
 		m_entryState->addTransition(m_idStarts[i], genIdentifier);
@@ -195,49 +269,6 @@ Lexer::addIdentifiers()
 		genIdentifier->addTransition(m_idMids[i], genIdentifier);
 
 	return genIdentifier;
-}
-
-
-
-// ****************************************************************************
-// Lexer::addLogicalOps()
-//
-// This function adds states for the following logical operator tokens:
-//	'and'
-//	'or'
-// ****************************************************************************
-void
-Lexer::addLogicalOps(State*	genIdentifier)
-{
-	// Add 'and' states. Each of these states must also branch off to the
-	// generic identifier state.
-	State*	and_d = new State(Token::LogicalOp);
-	State*	and_n = new State();
-	State*	and_a = new State();
-
-	m_entryState->addTransition('a', and_a);
-	and_a->addTransition('n', and_n);
-	and_n->addTransition('d', and_d);
-
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		and_a->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		and_n->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		and_d->addTransition(m_idMids[i], genIdentifier);
-
-	// Add 'or' states. Both of these states must also branch off to the
-	// generic identifier state.
-	State*	or_r = new State(Token::LogicalOp);
-	State*	or_o = new State();
-
-	m_entryState->addTransition('o', or_o);
-	or_o->addTransition('r', or_r);
-
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		or_o->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		or_o->addTransition(m_idMids[i], genIdentifier);
 }
 
 
@@ -257,24 +288,24 @@ void
 Lexer::addCompOps()
 {
 	// Greater than '>' and greater than or equal to comparison ops.
-	State*	gt	= new State(Token::CompOp);
-	State*	gte	= new State(Token::CompOp);
+	State*	gt	= new State(">", Token::CompOp);
+	State*	gte	= new State(">=", Token::CompOp);
 	m_entryState->addTransition('>', gt);
 	gt->addTransition('=', gte);
 
 	// Less than '<' and less than or equal to comparison ops.
-	State*	lt	= new State(Token::CompOp);
-	State*	lte	= new State(Token::CompOp);
+	State*	lt	= new State("<", Token::CompOp);
+	State*	lte	= new State("<=", Token::CompOp);
 	m_entryState->addTransition('<', lt);
 	lt->addTransition('=', lte);
 
 	// Equality '=' comparison op.
-	State*	eq = new State(Token::CompOp);
+	State*	eq = new State("=", Token::CompOp);
 	m_entryState->addTransition('=', eq);
 
 	// Inequality '!=' comparison op.
-	State*	neq_e = new State(Token::CompOp);
-	State*	neq_n = new State();
+	State*	neq_e = new State("!=", Token::CompOp);
+	State*	neq_n = new State("!=_!", );
 	m_entryState->addTransition('!', neq_n);
 	neq_n->addTransition('=', neq_e);
 }
@@ -293,15 +324,15 @@ void
 Lexer::addMultOps()
 {
 	// Multiplication '*' multiplication op.
-	State*	mu = new State(Token::MultOp);
+	State*	mu = new State("*", Token::MultOp);
 	m_entryState->addTransition('*', mu);
 
 	// Division '/' multiplication op.
-	State*	di = new State(Token::MultOp);
+	State*	di = new State("/", Token::MultOp);
 	m_entryState->addTransition('/', di);
 
 	// Modulus '%' multiplication op.
-	State*	mo = new State(Token::MultOp);
+	State*	mo = new State("%", Token::MultOp);
 	m_entryState->addTransition('%', mo);
 }
 
@@ -316,281 +347,114 @@ Lexer::addMultOps()
 // ****************************************************************************
 void
 Lexer::addAddOps()
-{
+{	
 	// Addition '*' addition op.
-	State*	add = new State(Token::AddOp);
+	State*	add = new State("+", Token::AddOp);
 	m_entryState->addTransition('+', add);
 
 	// Subtraction '/' addition op.
-	State*	sub = new State(Token::AddOp);
+	State*	sub = new State("-", Token::AddOp);
 	m_entryState->addTransition('-', sub);
 }
 
 
 
 // ****************************************************************************
-// Lexer::addUnaryOps()
+// Lexer::addStringConsts()
 //
-// This function adds states for the following unary operator tokens:
-//	'not'
-//	'sin'
-//	'cos'
-//	'tan'
-//	'stdout'
+// This function adds all of the states required to handle string literal
+// constants. Note that the format of a string is essentially "[anything]"
 // ****************************************************************************
 void
-Lexer::addUnaryOps(State*	genIdentifier)
+Lexer::addStringConsts()
 {
-	// Add 'not' states. Each of these states must also branch off to the
-	// generic identifier state.
-	State*	not_t	= new State(Token::UnaryOp);
-	State*	not_o	= new State();
-	State*	not_n	= new State();
+	// Add state to capture the first doublequote.
+	State*	start = new State("String start");
+	m_entryState->addTransition('\"', start);
 
-	m_entryState->addTransition('n', not_n);
-	not_n->addTransition('o', not_o);
-	not_o->addTransition('t', not_t);
+	// Add state to capture the ending doublequote.
+	State*	end = new State("String end", Token::StrConst);
+	start->addTransition('\"', end);
 
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		not_n->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		not_o->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		not_t->addTransition(m_idMids[i], genIdentifier);
-
-	// Add 'sin' states. Each of these states must also branch off to the
-	// generic identifier state.
-	State*	sin_n	= new State(Token::UnaryOp);
-	State*	sin_i	= new State();
-	State*	sin_s	= new State();
-
-	m_entryState->addTransition('s', sin_s);
-	sin_s->addTransition('i', sin_i);
-	sin_i->addTransition('n', sin_n);
-
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		sin_s->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		sin_i->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		sin_n->addTransition(m_idMids[i], genIdentifier);
-
-	// Add 'cos' states. Each of these states must also branch off to the
-	// generic identifier state.
-	State*	cos_s = new State(Token::UnaryOp);
-	State*	cos_o = new State();
-	State*	cos_c = new State();
-
-	m_entryState->addTransition('c', cos_c);
-	cos_c->addTransition('o', cos_o);
-	cos_o->addTransition('t', cos_s);
-
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		cos_c->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		cos_o->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		cos_s->addTransition(m_idMids[i], genIdentifier);
-
-	// Add 'tan' states. Each of these states must also branch off to the
-	// generic identifier state.
-	State*	tan_n = new State(Token::UnaryOp);
-	State*	tan_a = new State();
-	State*	tan_t = new State();
-
-	m_entryState->addTransition('t', tan_t);
-	tan_t->addTransition('a', tan_a);
-	tan_a->addTransition('n', tan_n);
-
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		tan_t->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		tan_a->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		tan_n->addTransition(m_idMids[i], genIdentifier);
-
-	// Add 'stdout' states. Each of these states must also branch off to the
-	// generic identifier state.
-	State*	stdout_2 = new State(Token::UnaryOp);
-	State*	stdout_u = new State();
-	State*	stdout_o = new State();
-	State*	stdout_d = new State();
-	State*	stdout_t = new State();
-	State*	stdout_s = new State();
-
-	m_entryState->addTransition('s', stdout_s);
-	stdout_s->addTransition('t', stdout_t);
-	stdout_t->addTransition('d', stdout_d);
-	stdout_d->addTransition('o', stdout_o);
-	stdout_o->addTransition('u', stdout_u);
-	stdout_u->addTransition('t', stdout_2);
-
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		stdout_s->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		stdout_t->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		stdout_d->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		stdout_o->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		stdout_u->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		stdout_2->addTransition(m_idMids[i], genIdentifier);
+	// Add a state for every character which can be inside a string and link it
+	// to the stard state.
+	State*	mid = new State("String mid");
+	mid->addTransition('\"', end);
+	
+	for (UINT i = 0; i < strlen(m_stringChars); i++)
+		start->addTransition(m_stringChars[i], mid);
 }
 
 
 
 // ****************************************************************************
-// Lexer::addTypes()
+// Lexer::addNumericConstants()
 //
-// This function adds states for the following primitive type tokens:
-//	'int'
-//	'real'
-//	'bool'
-//	'string'
+// This function adds all of the states required to handle real and integer 
+// constants.
 // ****************************************************************************
 void
-Lexer::addTypes(State*	genIdentifier)
-{
-	// Add 'int' states. Each of these states must also branch off to the
-	// generic identifier state.
-	State*	int_t = new State(Token::TypeName);
-	State*	int_n = new State();
-	State*	int_i = new State();
+Lexer::addNumericConsts()
+{	
+	// Add a state to handle numerals from the start state. Note that this is
+	// the finalization state for integers and the first part of reals.
+	State*	initial = new State("num init", Token::IntConst);
 
-	m_entryState->addTransition('i', int_i);
-	int_i->addTransition('n', int_n);
-	int_n->addTransition('t', int_t);
+	// Add two states for the '.' in reals, the first is for the one that
+	// follows the "initial" state and could define a proper real while the
+	// second one is for a real which is started with a point and is not, on
+	// its own, a proper real.
+	State*	mPoint = new State("mPoint", Token::RealConst);
+	State*	iPoint = new State("iPoint");
 
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		int_i->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		int_n->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		int_t->addTransition(m_idMids[i], genIdentifier);
+	// Add a state for the numerals after the point in a real, the [eE] in a
+	// real, the sign of the exponent, and finally add a state for the
+	// magintude of the exponent.
+	State*	pNums = new State("pNums", Token::RealConst);
+	State*	e = new State("num e", Token::RealConst);
+	State*	s = new State("num s");
+	State*	mag = new State("num mag", Token::RealConst);
 
-	// Add 'bool' states. Each of these states must also branch off to the
-	// generic identifier state.
-	State*	bool_l = new State(Token::TypeName);
-	State*	bool_2 = new State();
-	State*	bool_o = new State();
-	State*	bool_b = new State();
+	// Link the initial state.
+	// 	Entry	-[0-9]-> Initial
+	// 	Initial	-[0-9]-> Initial
+	// 	Initial	--[.]--> mPoint
+	// 	Initial	-[eE]--> e
+	initial->addTransition('.', mPoint);
+	initial->addTransition('e', e);
+	initial->addTransition('E', e);
+	for (UINT i = 0; i < strlen(m_numerals); i++) {
+		m_entryState->addTransition(m_numerals[i], initial);
+		initial->addTransition(m_numerals[i], initial);
+	}
+	
+	// Link the point states.
+	//	Entry	--[.]--> iPoint
+	//	Point	-[0-9]-> pNums
+	m_entryState->addTransition('.', iPoint);
+	for (UINT i = 0; i < strlen(m_numerals); i++) {
+		iPoint->addTransition(m_numerals[i], pNums);
+		mPoint->addTransition(m_numerals[i], pNums);
+	}
 
-	m_entryState->addTransition('b', bool_b);
-	bool_b->addTransition('o', bool_o);
-	bool_o->addTransition('o', bool_2);
-	bool_2->addTransition('l', bool_l);
-
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		bool_b->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		bool_o->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		bool_2->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		bool_l->addTransition(m_idMids[i], genIdentifier);
-
-	// Add 'real' states. Each of these states must also branch off to the
-	// generic identifier state.
-	State*	real_l = new State(Token::TypeName);
-	State*	real_a = new State();
-	State*	real_e = new State();
-	State*	real_r = new State();
-
-	m_entryState->addTransition('r', real_r);
-	real_r->addTransition('e', real_e);
-	real_e->addTransition('a', real_a);
-	real_a->addTransition('l', real_l);
-
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		real_r->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		real_e->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		real_a->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		real_l->addTransition(m_idMids[i], genIdentifier);
-
-	// Add 'string' states. Each of these states must also branch off to the
-	// generic identifier state.
-	State*	string_g = new State(Token::TypeName);
-	State*	string_n = new State();
-	State*	string_i = new State();
-	State*	string_r = new State();
-	State*	string_t = new State();
-	State*	string_s = new State();
-
-	m_entryState->addTransition('s', string_s);
-	string_s->addTransition('t', string_t);
-	string_t->addTransition('r', string_r);
-	string_r->addTransition('i', string_i);
-	string_i->addTransition('n', string_n);
-	string_n->addTransition('g', string_g);
-
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		string_s->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		string_t->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		string_r->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		string_i->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		string_n->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		string_g->addTransition(m_idMids[i], genIdentifier);
-}
-
-
-
-// ****************************************************************************
-// Lexer::addConditionals()
-//
-// This function adds states for the following conditional tokens:
-//	'if'
-//	'while'
-// ****************************************************************************
-void
-Lexer::addConditionals(State*	genIdentifier)
-{
-	// Add 'if' states. Each of these states must also branch off to the
-	// generic identifier state.
-	State*	if_f = new State(Token::Conditional);
-	State*	if_i = new State();
-
-	m_entryState->addTransition('i', if_i);
-	if_i->addTransition('f', if_f);
-
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		if_i->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		if_f->addTransition(m_idMids[i], genIdentifier);
-
-	// Add 'while' states. Each of these states must also branch off to the
-	// generic identifier state.
-	State*	while_e = new State(Token::Conditional);
-	State*	while_l = new State();
-	State*	while_i = new State();
-	State*	while_h = new State();
-	State*	while_w = new State();
-
-	m_entryState->addTransition('w', while_w);
-	while_w->addTransition('h', while_h);
-	while_h->addTransition('i', while_i);
-	while_i->addTransition('l', while_l);
-	while_l->addTransition('e', while_e);
-
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		while_w->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		while_h->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		while_i->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		while_l->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		while_e->addTransition(m_idMids[i], genIdentifier);
+	// Link the e state.
+	//	pNums	-[eE]--> e
+	//	e		-[+-]--> s
+	//	e		-[0-9]-> Mag
+	pNums->addTransition('e', e);
+	pNums->addTransition('E', e);
+	e->addTransition('+', s);
+	e->addTransition('-', s);
+	for (UINT i = 0; i < strlen(m_numerals); i++)
+		e->addTransition(m_numerals[i], mag);
+	
+	// Finally, link the magnitude state.
+	//	s	-[0-9]-> mag
+	//	mag	-[0-9]-> mag
+	for (UINT i = 0; i < strlen(m_numerals); i++) {
+		s->addTransition(m_numerals[i], mag);
+		mag->addTransition(m_numerals[i], mag);
+	}
 }
 
 
@@ -601,44 +465,60 @@ Lexer::addConditionals(State*	genIdentifier)
 // This function adds all of the other states for the token types not covered
 // in other methods.
 // Exponentiation operator:	'^'
-// Declarator:				'let'
 // Parentheses:				'('
 //							')'
 // ****************************************************************************
 void
-Lexer::addOthers(State*	genIdentifier)
-{
+Lexer::addOthers()
+{	
 	// Add exponentiation '^' exponentiation op.
-	State*	ex = new State(Token::ExpoOp);
+	State*	ex = new State("^", Token::ExpoOp);
 	m_entryState->addTransition('^', ex);
 
 	// Add assignment ':=' op.
-	State*	asg_e = new State(Token::AssgnOp);
-	State*	asg_c = new State();
+	State*	asg_e = new State(":=", Token::AssgnOp);
+	State*	asg_c = new State(":= :");
 
 	m_entryState->addTransition(':', asg_c);
 	asg_c->addTransition('=', asg_e);
 
-	// Add 'let' declarator states. Each of these states must also branch off
-	// to the generic identifier state.
-	State*	let_t = new State(Token::Declarator);
-	State*	let_e = new State();
-	State*	let_l = new State();
-
-	m_entryState->addTransition('l', let_l);
-	let_l->addTransition('e', let_e);
-	let_e->addTransition('t', let_t);
-
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		let_l->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		let_e->addTransition(m_idMids[i], genIdentifier);
-	for (UINT i = 0; i < strlen(m_idMids); i++)
-		let_t->addTransition(m_idMids[i], genIdentifier);
-
 	// Add parentheses '(' and ')'.
-	State*	op = new State(Token::Paren);
-	State*	cp = new State(Token::Paren);
+	State*	op = new State("(", Token::Paren);
+	State*	cp = new State(")", Token::Paren);
 	m_entryState->addTransition('(', op);
 	m_entryState->addTransition(')', cp);
+}
+
+
+
+// ****************************************************************************
+// Lexer::checkKeyword()
+//
+// Checks if the passed in string is a keyword. If it is, return the token
+// type of the keyword. Otherwise return identifier type.
+// ****************************************************************************
+Token::Type
+Lexer::checkKeyword(const char*	spelling)
+{
+	const comString	tok(spelling);
+
+	if (tok == "and" || tok == "or")
+		return Token::LogicalOp;
+
+	if (tok == "true" || tok == "false")
+		return Token::BoolConst;
+
+	if (tok == "bool" || tok == "real" || tok == "int" || tok == "string")
+		return Token::PrimType;
+
+	if (tok == "stdout" || tok == "not" || tok == "sin" || tok == "cos" || tok == "tan")
+		return Token::UnaryOp;
+
+	if (tok == "while" || tok == "if")
+		return Token::Conditional;
+
+	if (tok == "let")
+		return Token::Declarator;
+
+	return Token::Identifier;
 }

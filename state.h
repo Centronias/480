@@ -34,8 +34,9 @@ struct Transition {
 // ****************************************************************************
 class State {
   public:
-							State();
-							State(Token::Type);
+							State(const comString&	name);
+							State(const comString&	name,
+								  Token::Type		type);
 
 	const State*			transition(char	chr) const;
 
@@ -48,8 +49,11 @@ class State {
 
   private:
 	TransVec				m_transitions;
-
 	Token::Type				m_finalization;
+	UINT					m_num;
+	const comString			m_name;
+
+	static UINT				m_nID;
 };
 
 

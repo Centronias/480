@@ -1,0 +1,18 @@
+Logical Ops:	and or
+Comparison Ops:	> >= < <= = !=
+Expo Op:		^
+Mult Ops:		* / %
+Add Ops:		+ -
+Unary Ops:		sin cos tan stdout not
+Assignment Op:	:=
+Prim Types:		bool string real int
+Declarator:		let
+Conditionals:	if while
+Parentheses:	( )
+Identifiers:	cookie cookieJar WHAT _catface _catface82 91bananas whoah_w0t
+Booleans:		true false
+Reals:			1. .2 3.4 5.6e7 8e9 10e 11. .22 33.44 55.66e77 88e99 .0e11
+				1. .2 3.4 5.6E7 8E9 10E 11. .22 33.44 55.66E77 88E99 .0E11
+Ints:			1 23 456 7890
+Strings:		"What a country!" "It's like a whole new game!" "maybe if I added a tab	it would break" "Hopefully it does
+"

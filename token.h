@@ -34,14 +34,17 @@ class Token {
 		Declarator,
 		Conditional,
 		Paren,
-		TypeName,
+		Identifier,
+		BoolConst,
+		RealConst,
+		IntConst,
+		StrConst,
 		END
 	};
 
 							Token(Token::Type		type,
 								  const comString&	spelling,
 								  UINT				line);
-							~Token()	{printf("Destroying token: \"%s\"", (const char*) m_spelling);}
 
 	const Type				getType() const	{return m_type;}
 	const comString&		getSpelling() const	{return m_spelling;}

@@ -13,6 +13,10 @@
 // ****************************************************************************
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
+#include <unistd.h>
+#include </usr/include/ctype.h>
+#include <stdlib.h>
 
 
 

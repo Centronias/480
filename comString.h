@@ -31,6 +31,7 @@ class comString {
 	comString&			operator=(const comString&	other);
 	comString&			operator=(const char*	other);
 	bool				operator==(const comString&	other) const;
+	bool				operator==(const char*	other) const;
 	bool				operator!=(const comString&	other) const;
 	char&				operator[](const UINT	index) {return m_data[index];}
 
