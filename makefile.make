@@ -14,7 +14,7 @@ CCC = g++
 CCFLAGS = -fmax-errors=10 -Wall -std=gnu++11
 OBJS = comString.o token.o symbolTable.o state.o lexer.o
 SOURCE = lexer.cpp state.cpp comString.cpp symboltable.cpp token.cpp
-RUNFLAGS = -d
+RUNFLAGS =
 
 $(OBJS): $(SOURCE)
 	$(CCC) $(CCFLAGS) -c $(SOURCE)
@@ -23,7 +23,7 @@ compiler: $(OBJS)
 	$(CCC) $(CCFLAGS) -o compiler $(OBJS)
 
 clean:
-	rm -f *.o core *.exe
+	rm -f *.o core *.exe *.out *.stackdump
 	ls
 
 stutest.out: compiler
@@ -33,6 +33,9 @@ stutest.out: compiler
 #	cat stutest2.in
 #	-./compiler stutest2.in > stutest2.out
 #	cat stutest2.out
+
+fsaDump.out: compiler
+	./compiler -x
 
 proftest.out: compiler
 	cat $(PROFTEST)

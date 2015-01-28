@@ -18,7 +18,8 @@
 // ****************************************************************************
 // Static Member Initialization
 // ****************************************************************************
-UINT	State::m_nID = 0;
+UINT				State::m_nID = 0;
+comVector<State*>	State::m_states;
 
 
 
@@ -106,17 +107,19 @@ State::dumpFSA()
 {
 	FILE*	file = fopen("FSAdump.out", "w");
 
-	for (UINT i = 0; i < m_transitions.getNumEntries(); i++) {
-		State*	state = m_transitions[i];
+	for (UINT i = 0; i < m_states.getNumEntries(); i++) {
+		State*	state = m_states[i];
 
-		fprintf(file, "\"%s\" (%d):\n", (const char*) state->m_name, state->m_num);
+		fprintf(file, "\"%s\" (#%d):\n", (const char*) state->m_name, state->m_num);
 
 		if (state->hasFinalization())
-			fprintf(file, "  F: %s\n", state->m_finalization);
+			fprintf(file, "  F: %s\n", (const char*) Token::getTypeName(state->m_finalization));
 
-		for (UINT j = 0; j < state->m_transitions[j]; j++) {
+		for (UINT j = 0; j < state->m_transitions.getNumEntries(); j++) {
 			Transition*	t = state->m_transitions[j];
-			fprintf(file, "\t-'%c'-> %s \"%s\" (%d)", t->m_char, (const char*) t->m_state->m_name, t->m_state->m_num);
+			fprintf(file, "\t-'%c'-> \"%s\" (%d)\n", t->m_char, (const char*) t->m_state->m_name, t->m_state->m_num);
 		}
 	}
+
+	exit(EXIT_SUCCESS);
 }

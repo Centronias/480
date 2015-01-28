@@ -20,7 +20,7 @@
 // ****************************************************************************
 const char	Lexer::m_idStarts[]		= "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const char	Lexer::m_idMids[]		= "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-const char	Lexer::m_stringChars[]	= "`1234567890-=~!@#$%^&*()_+qwertyuiop[]QWERTYUIOP{}|asdfghjkl;ASDFGHJKL:zxcvbnm,./ZXCVBNM<>?\'";
+const char	Lexer::m_stringChars[]	= "`1234567890-=~!@#$%^&*()_+qwertyuiop[]QWERTYUIOP{}|asdfghjkl;ASDFGHJKL:zxcvbnm,./ZXCVBNM<>?\'\\\t ";
 const char	Lexer::m_numerals[]		= "1234567890";
 State*		Lexer::m_entryState		= NULL;
 bool		Lexer::m_debug			= false;
@@ -42,7 +42,7 @@ main(int	argc,
 	Lexer::readCmdLine(argc, argv, input);
 	Lexer::init();
 
-	if (Lexer::m_dumpFSA)
+	if (Lexer::dumpFSA())
 		State::dumpFSA();
 
 	Lexer::run(comString(input));
@@ -73,6 +73,7 @@ Lexer::readCmdLine(int		argc,
 			break;
 		  case 'x':
 			m_dumpFSA = true;
+			printf("FSA dump on\n");
 			break;
 		  case '?':
 			if (optopt == 'c')
@@ -87,12 +88,13 @@ Lexer::readCmdLine(int		argc,
 		}
 	}
 
-	if (argv[optind] == NULL) {
+	if (!m_dumpFSA && (argv[optind] == NULL)) {
 		fprintf(stderr, "Usage: compiler <input file>\n");
 		exit(EXIT_FAILURE);
 	}
-	
-	strncpy(inFile, argv[optind], PATH_MAX);
+
+	if (!m_dumpFSA)
+		strncpy(inFile, argv[optind], PATH_MAX);
 }
 
 
@@ -111,7 +113,7 @@ Lexer::init()
 	Token::init();
 
 	// Create the start state.
-	m_entryState = new State();
+	m_entryState = new State("Entry state");
 
 	// Create and link the states of the lexer state machine. All alphanumeric
 	// keywords are handled as a special case of identifiers.
@@ -312,7 +314,7 @@ Lexer::addCompOps()
 
 	// Inequality '!=' comparison op.
 	State*	neq_e = new State("!=", Token::CompOp);
-	State*	neq_n = new State("!=_!", );
+	State*	neq_n = new State("!=_!");
 	m_entryState->addTransition('!', neq_n);
 	neq_n->addTransition('=', neq_e);
 }
@@ -388,8 +390,10 @@ Lexer::addStringConsts()
 	State*	mid = new State("String mid");
 	mid->addTransition('\"', end);
 	
-	for (UINT i = 0; i < strlen(m_stringChars); i++)
+	for (UINT i = 0; i < strlen(m_stringChars); i++) {
 		start->addTransition(m_stringChars[i], mid);
+		mid->addTransition(m_stringChars[i], mid);
+	}
 }
 
 
@@ -443,6 +447,10 @@ Lexer::addNumericConsts()
 		iPoint->addTransition(m_numerals[i], pNums);
 		mPoint->addTransition(m_numerals[i], pNums);
 	}
+
+	// Link pNums to itself.
+	for (UINT i = 0; i < strlen(m_numerals); i++)
+		pNums->addTransition(m_numerals[i], pNums);
 
 	// Link the e state.
 	//	pNums	-[eE]--> e

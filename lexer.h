@@ -27,6 +27,8 @@ class Lexer {
 	static void			init();
 	static void			run(const comString&	inFile);
 
+	static bool			dumpFSA()	{return m_dumpFSA;}
+
   private:
   	static Token::Type	checkKeyword(const char*	spelling);
 
