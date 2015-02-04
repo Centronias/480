@@ -37,7 +37,11 @@ class SymbolTable;
 class Token;
 class State;
 class Lexer;
+class Nonterm
+class Parser;
 struct Transition;
+struct Production
+struct Terminal
 
 
 
@@ -64,3 +68,5 @@ typedef comVector<Token*>		TokVec;
 #include "symbolTable.h"
 #include "state.h"
 #include "lexer.h"
+#include "production.h"
+#include "parser.h"

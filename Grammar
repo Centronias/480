@@ -1,0 +1,62 @@
+S
+	()
+	(S)
+	EXPR
+	()S
+	(S)S
+	EXPR S
+EXPR
+	OPER
+	STMTS
+OPER
+	(:= NAME OPER)
+	(BINOPS OPER OPER)
+	(UNOPS OPER)
+	CONSTANTS
+	identifier
+BINOPS
+	+
+	-
+	*
+	/
+	%
+	^
+	=
+	>
+	>=
+	<
+	<=
+	!=
+	or
+	and
+UNOPS
+	-
+	not
+	sin
+	cos
+	tan
+CONSTANTS
+	string
+	int
+	real
+	bool
+STMTS
+	IFSTMTS
+	WHILESTMTS
+	LETSTMTS
+	PRINTSTMTS
+PRINTSTMTS
+	(stdout OPER)
+IFSTMTS
+	(if EXPR EXPR EXPR)
+	(if EXPR EXPR)
+WHILESTMTS
+	(while EXPR EXPRLIST)
+EXPRLIST
+	EXPR
+	EXPR EXPRLIST
+LETSTMTS
+	(let (VARLIST))
+VARLIST
+	(NAME type)
+	(NAME type) VARLIST

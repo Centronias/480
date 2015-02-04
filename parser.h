@@ -1,6 +1,6 @@
 // ****************************************************************************
 // ****************************************************************************
-// token.h
+// Parser.h
 // ****************************************************************************
 // 
 // ****************************************************************************
@@ -11,47 +11,22 @@
 // ****************************************************************************
 // Defines
 // ****************************************************************************
-#ifndef	H_TOKEN
-#define H_TOKEN
+#ifndef	H_PARSER
+#define H_PARSER
 
 
 
 // ****************************************************************************
-// State Class
+// Parser Class
 // ****************************************************************************
-class Token {
+class Parser {
   public:
-	enum Type {
-		NONE,
-		Operator,
-		PrimType,
-		StmtWord,
-		Paren,
-		Identifier,
-		BoolConst,
-		RealConst,
-		IntConst,
-		StrConst,
-		END
-	};
-
-							Token(Token::Type		type,
-								  const comString&	spelling,
-								  UINT				line);
-
-	const Type				getType() const	{return m_type;}
-	const comString&		getSpelling() const	{return m_spelling;}
-	UINT					getLine() const	{return m_line;}
-
-	static void				init();
-	static const comString&	getTypeName(Type	type) {return m_typeNames[type];}
+	static void			readCmdLine(int		argc,
+									char**	argv,
+									char*	inFile);
 
   private:
-	Type					m_type;
-	comString				m_spelling;
-	UINT					m_line;
-
-	static comString		m_typeNames[Token::END];
+	static bool			m_debug;
 };
 
 

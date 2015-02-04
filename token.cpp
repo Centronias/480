@@ -43,16 +43,9 @@ void
 Token::init()
 {
 	m_typeNames[Token::NONE]		= "INVALID TOKEN: NONE";
-	m_typeNames[Token::LogicalOp]	= "LogOp";
-	m_typeNames[Token::CompOp]		= "CmpOp";
-	m_typeNames[Token::ExpoOp]		= "ExpOp";
-	m_typeNames[Token::MultOp]		= "MulOp";
-	m_typeNames[Token::AddOp]		= "AddOp";
-	m_typeNames[Token::UnaryOp]		= "UnOp";
-	m_typeNames[Token::AssgnOp]		= "AsgOp";
+	m_typeNames[Token::Operator]	= "operator";
 	m_typeNames[Token::PrimType]	= "Prim";
-	m_typeNames[Token::Declarator]	= "Decl";
-	m_typeNames[Token::Conditional]	= "Cond";
+	m_typeNames[Token::StmtWord]	= "Statment";
 	m_typeNames[Token::Paren]		= "Paren";
 	m_typeNames[Token::BoolConst]	= "Bool";
 	m_typeNames[Token::RealConst]	= "Real";

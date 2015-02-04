@@ -297,23 +297,23 @@ void
 Lexer::addCompOps()
 {
 	// Greater than '>' and greater than or equal to comparison ops.
-	State*	gt	= new State(">", Token::CompOp);
-	State*	gte	= new State(">=", Token::CompOp);
+	State*	gt	= new State(">", Token::Operator);
+	State*	gte	= new State(">=", Token::Operator);
 	m_entryState->addTransition('>', gt);
 	gt->addTransition('=', gte);
 
 	// Less than '<' and less than or equal to comparison ops.
-	State*	lt	= new State("<", Token::CompOp);
-	State*	lte	= new State("<=", Token::CompOp);
+	State*	lt	= new State("<", Token::Operator);
+	State*	lte	= new State("<=", Token::Operator);
 	m_entryState->addTransition('<', lt);
 	lt->addTransition('=', lte);
 
 	// Equality '=' comparison op.
-	State*	eq = new State("=", Token::CompOp);
+	State*	eq = new State("=", Token::Operator);
 	m_entryState->addTransition('=', eq);
 
 	// Inequality '!=' comparison op.
-	State*	neq_e = new State("!=", Token::CompOp);
+	State*	neq_e = new State("!=", Token::Operator);
 	State*	neq_n = new State("!=_!");
 	m_entryState->addTransition('!', neq_n);
 	neq_n->addTransition('=', neq_e);
@@ -333,15 +333,15 @@ void
 Lexer::addMultOps()
 {
 	// Multiplication '*' multiplication op.
-	State*	mu = new State("*", Token::MultOp);
+	State*	mu = new State("*", Token::Operator);
 	m_entryState->addTransition('*', mu);
 
 	// Division '/' multiplication op.
-	State*	di = new State("/", Token::MultOp);
+	State*	di = new State("/", Token::Operator);
 	m_entryState->addTransition('/', di);
 
 	// Modulus '%' multiplication op.
-	State*	mo = new State("%", Token::MultOp);
+	State*	mo = new State("%", Token::Operator);
 	m_entryState->addTransition('%', mo);
 }
 
@@ -358,11 +358,11 @@ void
 Lexer::addAddOps()
 {	
 	// Addition '*' addition op.
-	State*	add = new State("+", Token::AddOp);
+	State*	add = new State("+", Token::Operator);
 	m_entryState->addTransition('+', add);
 
 	// Subtraction '/' addition op.
-	State*	sub = new State("-", Token::AddOp);
+	State*	sub = new State("-", Token::Operator);
 	m_entryState->addTransition('-', sub);
 }
 
@@ -487,11 +487,11 @@ void
 Lexer::addOthers()
 {	
 	// Add exponentiation '^' exponentiation op.
-	State*	ex = new State("^", Token::ExpoOp);
+	State*	ex = new State("^", Token::Operator);
 	m_entryState->addTransition('^', ex);
 
 	// Add assignment ':=' op.
-	State*	asg_e = new State(":=", Token::AssgnOp);
+	State*	asg_e = new State(":=", Token::Operator);
 	State*	asg_c = new State(":= :");
 
 	m_entryState->addTransition(':', asg_c);
@@ -517,23 +517,17 @@ Lexer::checkKeyword(const char*	spelling)
 {
 	const comString	tok(spelling);
 
-	if (tok == "and" || tok == "or")
-		return Token::LogicalOp;
-
 	if (tok == "true" || tok == "false")
 		return Token::BoolConst;
 
 	if (tok == "bool" || tok == "real" || tok == "int" || tok == "string")
 		return Token::PrimType;
 
-	if (tok == "stdout" || tok == "not" || tok == "sin" || tok == "cos" || tok == "tan")
-		return Token::UnaryOp;
+	if (tok == "not" || tok == "sin" || tok == "cos" || tok == "tan" || tok == "and" || tok == "or")
+		return Token::Operator;
 
-	if (tok == "while" || tok == "if")
-		return Token::Conditional;
-
-	if (tok == "let")
-		return Token::Declarator;
+	if (tok == "stdout" || tok == "while" || tok == "if" || tok == "let")
+		return Token::StmtWord;
 
 	return Token::Identifier;
 }

@@ -1,6 +1,6 @@
 // ****************************************************************************
 // ****************************************************************************
-// token.h
+// Production.h
 // ****************************************************************************
 // 
 // ****************************************************************************
@@ -11,47 +11,40 @@
 // ****************************************************************************
 // Defines
 // ****************************************************************************
-#ifndef	H_TOKEN
-#define H_TOKEN
+#ifndef	H_PRODUCTION
+#define H_PRODUCTION
 
 
 
 // ****************************************************************************
-// State Class
+// Production Struct
 // ****************************************************************************
-class Token {
+struct Production {
+	
+};
+
+
+
+// ****************************************************************************
+// Terminal Struct
+// ****************************************************************************
+struct Terminal {
+	
+};
+
+
+
+// ****************************************************************************
+// NonTerm Class
+// ****************************************************************************
+class NonTerm {
   public:
-	enum Type {
-		NONE,
-		Operator,
-		PrimType,
-		StmtWord,
-		Paren,
-		Identifier,
-		BoolConst,
-		RealConst,
-		IntConst,
-		StrConst,
-		END
-	};
-
-							Token(Token::Type		type,
-								  const comString&	spelling,
-								  UINT				line);
-
-	const Type				getType() const	{return m_type;}
-	const comString&		getSpelling() const	{return m_spelling;}
-	UINT					getLine() const	{return m_line;}
-
-	static void				init();
-	static const comString&	getTypeName(Type	type) {return m_typeNames[type];}
+	static void			readCmdLine(int		argc,
+									char**	argv,
+									char*	inFile);
 
   private:
-	Type					m_type;
-	comString				m_spelling;
-	UINT					m_line;
-
-	static comString		m_typeNames[Token::END];
+	static bool			m_debug;
 };
 
 
