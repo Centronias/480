@@ -120,4 +120,6 @@ State::dumpFSA()
 			fprintf(file, "\t-'%c'-> \"%s\" (%d)\n", t->m_char, (const char*) t->m_state->m_name, t->m_state->m_num);
 		}
 	}
+
+	exit(EXIT_SUCCESS);
 }

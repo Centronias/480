@@ -9,7 +9,7 @@ EXPR
 	OPER
 	STMTS
 OPER
-	(:= identifier OPER)
+	(:= NAME OPER)
 	(BINOPS OPER OPER)
 	(UNOPS OPER)
 	CONSTANTS
@@ -52,11 +52,11 @@ IFSTMTS
 	(if EXPR EXPR)
 WHILESTMTS
 	(while EXPR EXPRLIST)
-LETSTMTS
-	(let (VARLIST))
 EXPRLIST
 	EXPR
 	EXPR EXPRLIST
+LETSTMTS
+	(let (VARLIST))
 VARLIST
-	(identifier type)
-	(identifier type) VARLIST
+	(NAME type)
+	(NAME type) VARLIST

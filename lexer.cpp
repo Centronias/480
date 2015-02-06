@@ -23,6 +23,79 @@ const char	Lexer::m_idMids[]		= "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRST
 const char	Lexer::m_stringChars[]	= "`1234567890-=~!@#$%^&*()_+qwertyuiop[]QWERTYUIOP{}|asdfghjkl;ASDFGHJKL:zxcvbnm,./ZXCVBNM<>?\'\\\t ";
 const char	Lexer::m_numerals[]		= "1234567890";
 State*		Lexer::m_entryState		= NULL;
+bool		Lexer::m_debug			= false;
+bool		Lexer::m_dumpFSA		= false;
+
+
+
+// ****************************************************************************
+// main()
+// ****************************************************************************
+int
+main(int	argc,
+	 char**	argv)
+{
+	printf("Running lexer.exe\n\n");
+
+	char	input[PATH_MAX];
+
+	Lexer::readCmdLine(argc, argv, input);
+	Lexer::init();
+
+	if (Lexer::dumpFSA())
+		State::dumpFSA();
+
+	Lexer::run(comString(input));
+
+	printf("\n\nExiting lexer.exe\n");
+}
+
+
+
+// ************************************************************************************************
+// readCmdLine()
+//
+// This method reads the command line arguments to get the input file. If the input file is
+// missing, we print the proper usage and then exit.
+// ************************************************************************************************
+void
+Lexer::readCmdLine(int		argc,
+				   char**	argv,
+				   char*	inFile)
+{
+	opterr = 0;
+
+	char c;
+	while ( (c = getopt(argc, argv, "dx")) != -1 ) {
+		switch (c) {
+		  case 'd':
+			m_debug = true;
+			break;
+		  case 'x':
+			m_dumpFSA = true;
+			printf("FSA dump on\n");
+			break;
+		  case '?':
+			if (optopt == 'c')
+				fprintf(stderr, "Option -%c requires an argument.\n", optopt);
+			else if (isprint(optopt))
+				fprintf(stderr, "Unknown option '-%c'.\n", optopt);
+			else
+				fprintf(stderr, "Unknown option character '\\x%x'.\n", optopt);
+			exit(EXIT_FAILURE);
+		  default:
+		  	exit(2);
+		}
+	}
+
+	if (!m_dumpFSA && (argv[optind] == NULL)) {
+		fprintf(stderr, "Usage:\n\tcompiler <input file>\n\tcompiler -x\t\t(Dumps the FSA)\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if (!m_dumpFSA)
+		strncpy(inFile, argv[optind], PATH_MAX);
+}
 
 
 
@@ -51,11 +124,6 @@ Lexer::init()
 	addOthers();
 	addStringConsts();
 	addNumericConsts();
-
-	if (Global::isDumpFSA()) {
-		State::dumpFSA();
-		Global::succeed();
-	}
 }
 
 

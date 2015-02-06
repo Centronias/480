@@ -37,12 +37,11 @@ class SymbolTable;
 class Token;
 class State;
 class Lexer;
-class NonTerm;
+class Nonterm
 class Parser;
 struct Transition;
-struct Production;
-struct ProdEle;
-struct Terminal;
+struct Production
+struct Terminal
 
 
 
@@ -51,17 +50,12 @@ struct Terminal;
 // ****************************************************************************
 typedef comVector<Transition*>	TransVec;
 typedef comVector<Token*>		TokVec;
-typedef	comVector<Production*>	ProdVec;
-typedef comVector<ProdEle*>		ProdEleVec;
-typedef comVector<State*>		StateVec;
-typedef comVector<NonTerm*>		NTermVec;
 
 
 
 // ****************************************************************************
 // Helper Includes
 // ****************************************************************************
-#include "global.h"
 #include "comVector.h"
 #include "comString.h"
 
@@ -73,6 +67,6 @@ typedef comVector<NonTerm*>		NTermVec;
 #include "token.h"
 #include "symbolTable.h"
 #include "state.h"
-#include "grammar.h"
 #include "lexer.h"
+#include "production.h"
 #include "parser.h"

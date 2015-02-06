@@ -21,10 +21,12 @@
 // ****************************************************************************
 class Parser {
   public:
-	static void			init();
+	static void			readCmdLine(int		argc,
+									char**	argv,
+									char*	inFile);
 
   private:
-	static NonTerm*		m_entrySymbol;
+	static bool			m_debug;
 };
 
 

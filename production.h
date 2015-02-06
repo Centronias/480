@@ -1,6 +1,6 @@
 // ****************************************************************************
 // ****************************************************************************
-// grammar.h
+// Production.h
 // ****************************************************************************
 // 
 // ****************************************************************************
@@ -11,42 +11,41 @@
 // ****************************************************************************
 // Defines
 // ****************************************************************************
-#ifndef	H_GLOBAL
-#define H_GLOBAL
+#ifndef	H_PRODUCTION
+#define H_PRODUCTION
 
 
 
 // ****************************************************************************
-// Global Class
+// Production Struct
 // ****************************************************************************
-class Global {
-  public:
-  	static void			run(int		argc,
-  							char**	argv);
-	static void			readCmdLine(int		argc,
-									char**	argv,
-									char*	inFile);
-
-	static void			fail();
-	static void			succeed();
-
-	static bool			isDebug()	{return m_debug;}
-	static bool			isDumpFSA()	{return m_dumpFSA;}
-	static bool			isDumpGrammar()	{return m_dumpGrammar;}
-
-  private:
-	static bool			m_debug;
-	static bool			m_dumpFSA;
-	static bool			m_dumpGrammar;
+struct Production {
+	
 };
 
 
 
 // ****************************************************************************
-// Entry Point Declaration
+// Terminal Struct
 // ****************************************************************************
-int						main(int	argc,
-							 char**	argv);
+struct Terminal {
+	
+};
+
+
+
+// ****************************************************************************
+// NonTerm Class
+// ****************************************************************************
+class NonTerm {
+  public:
+	static void			readCmdLine(int		argc,
+									char**	argv,
+									char*	inFile);
+
+  private:
+	static bool			m_debug;
+};
 
 
 

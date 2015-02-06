@@ -12,8 +12,8 @@
 
 CCC = g++
 CCFLAGS = -fmax-errors=10 -Wall -std=gnu++11
-OBJS = comString.o token.o symbolTable.o state.o lexer.o grammar.o parser.o global.o
-SOURCE = lexer.cpp state.cpp comString.cpp symboltable.cpp token.cpp grammar.cpp parser.cpp global.cpp
+OBJS = comString.o token.o symbolTable.o state.o lexer.o production.o parser.o
+SOURCE = lexer.cpp state.cpp comString.cpp symboltable.cpp token.cpp production.cpp parser.cpp
 RUNFLAGS =
 
 $(OBJS): $(SOURCE)
@@ -35,10 +35,7 @@ stutest.out: compiler
 #	cat stutest2.out
 
 fsaDump.out: compiler
-	./compiler -f
-
-grammarDump.out: compiler
-	./compiler -g
+	./compiler -x
 
 proftest.out: compiler
 	cat $(PROFTEST)

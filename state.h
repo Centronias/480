@@ -55,8 +55,8 @@ class State {
 	UINT					m_num;
 	const comString			m_name;
 
-	static UINT				m_nID;
-	static StateVec			m_states;
+	static UINT					m_nID;
+	static comVector<State*>	m_states;
 };
 
 
