@@ -33,6 +33,7 @@ class comString {
 	bool				operator==(const comString&	other) const;
 	bool				operator==(const char*	other) const;
 	bool				operator!=(const comString&	other) const;
+	bool				operator!=(const char*	other) const;
 	char&				operator[](const UINT	index) {return m_data[index];}
 
 	UINT				getLength() const	{return strlen(m_data);}
