@@ -1,6 +1,6 @@
 // ****************************************************************************
 // ****************************************************************************
-// common.h
+// grammar.h
 // ****************************************************************************
 // 
 // ****************************************************************************
@@ -9,70 +9,77 @@
 
 
 // ****************************************************************************
-// External Includes
-// ****************************************************************************
-#include <stdio.h>
-#include <string.h>
-#include <limits.h>
-#include <unistd.h>
-#include </usr/include/ctype.h>
-#include <stdlib.h>
-
-
-
-// ****************************************************************************
 // Defines
 // ****************************************************************************
-#define UINT	unsigned int
-#define BYTE	unsigned char
+#ifndef	H_GRAMMAR
+#define H_GRAMMAR
 
 
 
 // ****************************************************************************
-// Forward Class Declarations
+// ProdEle Struct
 // ****************************************************************************
-template <class T> class comVector;
-class comString;
-class SymbolTable;
-class Token;
-class State;
-class Lexer;
-class NonTerm;
-class Parser;
-struct Transition;
-struct Production;
-struct ProdEle;
-struct Terminal;
+struct ProdEle {
+	union {
+		Terminal*	m_term;
+		NonTerm*	m_nonTerm;
+	};
 
+	const bool	m_isTerm;
 
-
-// ****************************************************************************
-// Type Definitions
-// ****************************************************************************
-typedef comVector<Transition*>	TransVec;
-typedef comVector<Token*>		TokVec;
-typedef	comVector<Production*>	ProdVec;
-typedef comVector<ProdEle*>		ProdEleVec;
-typedef comVector<State*>		StateVec;
-typedef comVector<NonTerm*>		NTermVec;
+						ProdEle(Terminal*	term);
+						ProdEle(NonTerm*	nTerm);
+};
 
 
 
 // ****************************************************************************
-// Helper Includes
+// Production Struct
 // ****************************************************************************
-#include "global.h"
-#include "comVector.h"
-#include "comString.h"
+struct Production {
+	ProdEleVec			m_elements;
+
+	void				add(ProdEle*	ele)	{m_elements.append(ele);}
+	void				add(Terminal*	t)	{m_elements.append(new ProdEle(t));}
+	void				add(NonTerm*	n)	{m_elements.append(new ProdEle(n));}
+};
 
 
 
 // ****************************************************************************
-// Class Includes
+// Terminal Struct
 // ****************************************************************************
-#include "token.h"
-#include "symbolTable.h"
-#include "state.h"
-#include "grammar.h"
-#include "lexer.h"
-#include "parser.h"
+struct Terminal {
+	Token::Type		m_tType;
+	const comString	m_spelling;
+
+						Terminal(Token::Type	type);
+						Terminal(Token::Type		type,
+								 const comString&	spelling);
+};
+
+
+
+// ****************************************************************************
+// NonTerm Class
+// ****************************************************************************
+class NonTerm {
+  public:
+						NonTerm(const comString&	name);
+
+	void				addProduction(Production*	production);
+	void				addProduction(Terminal*	term);
+	void				addProduction(NonTerm*	nTerm);
+
+	static void			dumpGrammar();
+
+  private:
+	ProdVec				m_productions;
+	const comString		m_name;
+
+	static NTermVec		m_nTerms;
+};
+
+
+
+#endif

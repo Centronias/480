@@ -111,3 +111,9 @@ comString::operator!=(const comString&	other) const
 {
 	return strcmp(m_data, other.m_data) != 0;
 }
+
+bool
+comString::operator!=(const char*	other) const
+{
+	return strcmp(m_data, other) != 0;
+}
