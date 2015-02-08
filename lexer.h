@@ -27,6 +27,8 @@ class Lexer {
 	static void			init();
 	static void			run(const comString&	inFile);
 
+	static void			printTokens();
+
 	static bool			dumpFSA()	{return m_dumpFSA;}
 
   private:
@@ -42,6 +44,8 @@ class Lexer {
 	static State*		addIdentifiers();
 
 	static State*		m_entryState;
+
+	static TokList		m_tokens;
 
 	static const char	m_idStarts[];
 	static const char	m_idMids[];

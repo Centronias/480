@@ -23,6 +23,7 @@ const char	Lexer::m_idMids[]		= "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRST
 const char	Lexer::m_stringChars[]	= "`1234567890-=~!@#$%^&*()_+qwertyuiop[]QWERTYUIOP{}|asdfghjkl;ASDFGHJKL:zxcvbnm,./ZXCVBNM<>?\'\\\t ";
 const char	Lexer::m_numerals[]		= "1234567890";
 State*		Lexer::m_entryState		= NULL;
+TokList		Lexer::m_tokens;
 
 
 
@@ -92,8 +93,6 @@ Lexer::run(const comString&	input)
 	char	buf[1 << 7];
 	char*	bufLoc = buf;
 
-	TokVec	tokens;
-
 	// Read input until there is no more input to be read.
 	while (true) {
 		chr = fgetc(file);
@@ -123,7 +122,7 @@ Lexer::run(const comString&	input)
 					type = checkKeyword(buf);
 				}
 
-				tokens.append(new Token(type, buf, lineNum));
+				m_tokens.append(new Token(type, buf, lineNum));
 
 
 				curr	= m_entryState;
@@ -172,19 +171,7 @@ Lexer::run(const comString&	input)
 			break;
 	}
 
-	printf("Done parsing.\nOutputting tokens:\n");
-
-	UINT	printL = 0;
-	for (UINT i = 0; i < tokens.getNumEntries(); i++) {
-		while (printL < tokens[i]->getLine()) {
-			printf("\n");
-			printL++;
-		}
-
-		printf("(%s : \"%s\")",
-			   (const char*) Token::getTypeName(tokens[i]->getType()),
-			   (const char*) tokens[i]->getSpelling());
-	}
+	printf("Done parsing.\n");
 }
 
 
@@ -462,4 +449,30 @@ Lexer::checkKeyword(const char*	spelling)
 		return Token::StmtWord;
 
 	return Token::Identifier;
+}
+
+
+
+// ****************************************************************************
+// Lexer::printTokens()
+//
+// This method simply prints out the contents of the token list.
+// ****************************************************************************
+void
+Lexer::printTokens()
+{
+	UINT			printL = 0;
+	TokListIter		iter(m_tokens);
+	const Token*	token = NULL;
+
+	while ((token = iter.next())) {
+		while (printL < token->getLine()) {
+			printf("\n");
+			printL++;
+		}
+
+		printf("(%s : \"%s\")",
+			   (const char*) Token::getTypeName(token->getType()),
+			   (const char*) token->getSpelling());
+	}	
 }

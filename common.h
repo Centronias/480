@@ -32,6 +32,9 @@
 // Forward Class Declarations
 // ****************************************************************************
 template <class T> class comVector;
+template <class T> class comDList;
+template <class T> class comDListLink;
+template <class T> class comDListIter;
 class comString;
 class SymbolTable;
 class Token;
@@ -55,6 +58,8 @@ typedef	comVector<Production*>	ProdVec;
 typedef comVector<ProdEle*>		ProdEleVec;
 typedef comVector<State*>		StateVec;
 typedef comVector<NonTerm*>		NTermVec;
+typedef comDList<Token*>		TokList;
+typedef comDListIter<Token*>	TokListIter;
 
 
 
@@ -63,6 +68,7 @@ typedef comVector<NonTerm*>		NTermVec;
 // ****************************************************************************
 #include "global.h"
 #include "comVector.h"
+#include "comDList.h"
 #include "comString.h"
 
 
