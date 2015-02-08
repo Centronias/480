@@ -42,6 +42,7 @@ class State;
 class Lexer;
 class NonTerm;
 class Parser;
+class ParseTree;
 struct Transition;
 struct Production;
 struct ProdEle;

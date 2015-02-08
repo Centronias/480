@@ -29,6 +29,8 @@ struct ProdEle {
 
 						ProdEle(Terminal*	term);
 						ProdEle(NonTerm*	nTerm);
+
+	const comString&	toString();
 };
 
 
@@ -42,6 +44,8 @@ struct Production {
 	void				add(ProdEle*	ele)	{m_elements.append(ele);}
 	void				add(Terminal*	t)	{m_elements.append(new ProdEle(t));}
 	void				add(NonTerm*	n)	{m_elements.append(new ProdEle(n));}
+
+	comString&			printable(comString&	buf);
 };
 
 
@@ -71,6 +75,8 @@ class NonTerm {
 	void				addProduction(Terminal*	term);
 	void				addProduction(NonTerm*	nTerm);
 
+	const comString&	getName()	{return m_name;}
+
 	static void			dumpGrammar();
 
   private:
@@ -78,6 +84,21 @@ class NonTerm {
 	const comString		m_name;
 
 	static NTermVec		m_nTerms;
+};
+
+
+
+// ****************************************************************************
+// ParseTree Class
+// ****************************************************************************
+class ParseTree {
+  public:
+						ParseTree();
+
+  private:
+	ParseTree*			m_children[6];
+
+	const Production*	m_production;
 };
 
 

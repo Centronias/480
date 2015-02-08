@@ -105,25 +105,46 @@ void
 NonTerm::dumpGrammar()
 {
 	FILE*	file = fopen("grammardump.out", "w");
+	comString	printable("");
 
 	for (UINT i = 0; i < m_nTerms.getNumEntries(); i++) {
 		NonTerm*	nTerm = m_nTerms[i];
 
 		fprintf(file, "%s\n", (const char*) nTerm->m_name);
 
-		for (UINT j = 0; j < nTerm->m_productions.getNumEntries(); j++) {
-			Production*	prod = nTerm->m_productions[j];
-
-			fprintf(file, "\t");
-			for (UINT k = 0; k < prod->m_elements.getNumEntries(); k++) {
-				ProdEle*	e = prod->m_elements[k];
-
-				if (e->m_isTerm)
-					fprintf(file, "%s ", (const char*) ((e->m_term->m_spelling != "") ? e->m_term->m_spelling : Token::getTypeName(e->m_term->m_tType)));
-				else
-					fprintf(file, "%s ", (const char*) e->m_nonTerm->m_name);
-			}
-			fprintf(file, "\n");
-		}
+		for (UINT j = 0; j < nTerm->m_productions.getNumEntries(); j++)
+			fprintf(file, "\t%s\n", (const char*) nTerm->m_productions[j]->printable(printable));
 	}
+}
+
+
+
+// ****************************************************************************
+// ProdEle::toString()
+// ****************************************************************************
+const comString&
+ProdEle::toString()
+{
+	if (m_isTerm)
+		return ((m_term->m_spelling != "") ? m_term->m_spelling : Token::getTypeName(m_term->m_tType));
+	else
+		return m_nonTerm->getName();
+}
+
+
+
+// ****************************************************************************
+// Production::printable()
+// ****************************************************************************
+comString&
+Production::printable(comString&	buf)
+{
+	char	printBuffer[128];
+	char*	loc = printBuffer;
+
+	for (UINT i = 0; i < m_elements.getNumEntries(); i++)
+		loc += sprintf(loc, "%s ", (const char*) m_elements[i]->toString());
+
+	buf = printBuffer;
+	return buf;
 }

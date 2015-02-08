@@ -53,6 +53,7 @@ Global::run(int		argc,
 	Parser::init();
 
 	Lexer::run(comString(input));
+	Lexer::printTokens();
 //	Parser::run();
 }
 

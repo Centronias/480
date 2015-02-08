@@ -160,11 +160,12 @@ template <class T>
 T
 comDListIter<T>::next()
 {
+	if (!m_next)
+		return NULL;
+
 	comDListLink<T>*	ret	= m_next;
-	if (ret) {
 		m_prev	= ret;
 		m_next	= ret->m_next;
-	}
 	return ret->m_data;
 }
 
@@ -172,6 +173,9 @@ template <class T>
 T
 comDListIter<T>::prev()
 {
+	if (!m_prev)
+		return NULL;
+
 	comDListLink<T>*	ret	= m_prev;
 	if (ret) {
 		m_next	= ret;

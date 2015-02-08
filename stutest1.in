@@ -1,18 +1,3 @@
-and or
-> >= < <= = !=
-^
-* / %
-+ -
-sin cos tan stdout not
-:=
-bool string real int
-let
-if while
-( )
-cookie cookieJar WHAT _catface _catface82 ba91nanas whoah_w0t
-true false
-1. .2 3.4 5.6e7 8e9 10e 11. .22 33.44 55.66e77 88e99 .0e11
-1. .2 3.4 5.6E7 8E9 10E 11. .22 33.44 55.66E77 88E99 .0E11
-1 23 456 7890
-"What a country!" "It's like a whole new game!" "maybe if I added a tab	it would break" "Hopefully it does
-"
+(1  x  (1 5))
+((+ 1 (* (+ 2 3) 7)))
+((while (= 5 x) (:= x (- x 1))))

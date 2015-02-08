@@ -127,7 +127,7 @@ Lexer::run(const comString&	input)
 
 				curr	= m_entryState;
 				bufLoc	= buf;
-				ungetc(chr, stdin);
+				ungetc(chr, file);
 			} else {
 				// If the current state does not accept (and there is no
 				// transition for our current character), the entire current
@@ -171,7 +171,7 @@ Lexer::run(const comString&	input)
 			break;
 	}
 
-	printf("Done parsing.\n");
+	printf("Done running lexer.\n");
 }
 
 
