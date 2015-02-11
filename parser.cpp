@@ -316,5 +316,6 @@ Parser::init()
 void
 Parser::run()
 {
-	
+	TokList&	tokens = Lexer::getTokens();
+	TokListIter	iter(tokens);
 }

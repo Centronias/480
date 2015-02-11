@@ -148,3 +148,26 @@ Production::printable(comString&	buf)
 	buf = printBuffer;
 	return buf;
 }
+
+
+
+// ****************************************************************************
+// ParseTree::ParseTree()
+// ****************************************************************************
+ParseTree::ParseTree(NonTerm*	nTerm)
+:	m_prodEle(nTerm),
+	m_numChildren(0),
+	m_production(NULL)
+{
+	for (UINT i = 0; i < 6; i++)
+		m_children[i] = NULL;
+}
+
+ParseTree::ParseTree(Terminal*	term)
+:	m_prodEle(term),
+	m_numChildren(0),
+	m_production(NULL)
+{
+	for (UINT i = 0; i < 6; i++)
+		m_children[i] = NULL;
+}

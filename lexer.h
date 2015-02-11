@@ -27,6 +27,7 @@ class Lexer {
 	static void			init();
 	static void			run(const comString&	inFile);
 
+	static TokList&		getTokens()	{return m_tokens;}
 	static void			printTokens();
 
 	static bool			dumpFSA()	{return m_dumpFSA;}

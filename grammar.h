@@ -93,12 +93,14 @@ class NonTerm {
 // ****************************************************************************
 class ParseTree {
   public:
-						ParseTree();
+						ParseTree(NonTerm*	nTerm);
+						ParseTree(Terminal*	term);
 
   private:
 	ParseTree*			m_children[6];
-
-	const Production*	m_production;
+	ProdEle				m_prodEle;
+	UINT				m_numChildren;
+	Production*			m_production;
 };
 
 
