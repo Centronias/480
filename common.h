@@ -43,8 +43,8 @@ class Lexer;
 class NonTerm;
 class Parser;
 class ParseTree;
+class Production;
 struct Transition;
-struct Production;
 struct ProdEle;
 struct Terminal;
 

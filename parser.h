@@ -23,6 +23,9 @@ class Parser {
   public:
 	static void			init();
 	static void			run();
+	static bool			parse(TokenListIter&	tIter,
+							  ParseTree*		tree,
+							  UINT&				tokensParsed);
 
   private:
 	static NonTerm*		m_entrySymbol;

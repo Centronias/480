@@ -316,6 +316,60 @@ Parser::init()
 void
 Parser::run()
 {
+	// Construct our parse tree. The top level non terminal is S
+	ParseTree*	tree = new ParseTree(m_entrySymbol);
+
+	// Prepare to iterate over the tokens.
 	TokList&	tokens = Lexer::getTokens();
 	TokListIter	iter(tokens);
+}
+
+
+
+// ****************************************************************************
+// parse()
+// ****************************************************************************
+bool
+Parser::parse(TokenListIter&	iter,
+			  ParseTree*		tree,
+			  UINT&				tokensParsed)
+{
+	Token*	token = NULL;
+
+	if (tree->isTerminal()) {
+		// If this is a terminal node, something went wrong.
+		fprintf(stderr, "Parser::parse() encountered terminal node.\n");
+		Global::fail();
+	} else {
+		// This is a non terminal node, so get the productions and loop through
+		// them.
+		NonTerm*	nTerm = tree->getNonTerm();
+		ProdVec&	prods = nTerm->getProductions();
+
+		for (UINT i = 0; i < prods.getNumEntries(); i++) {
+			// For each production, loop through the elements and...
+			Production*	prod		= prods[i];
+			bool		prodSuccess	= false;
+
+			for (UINT j = 0; j < prod.getNumEntries(); j++) {
+				ProdEle*	pe = prod[j];
+
+				if (pe->m_isTerm) {
+					// If the element is a terminal, check it against the next
+					// token from the iterator.
+					// TODO:
+				} else {
+					// If the element is not a terminal, create a new tree
+					// branch for this nonterminal and recurse.
+					// TODO:
+				}
+
+				if (j == prod.getNumEntries() - 1) {
+					// If we're here, we have successfully parsed the entire
+					// production and it is a good match.
+					prodSuccess = true;
+				}
+			}
+		}
+	}
 }

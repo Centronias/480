@@ -38,12 +38,10 @@ struct ProdEle {
 // ****************************************************************************
 // Production Struct
 // ****************************************************************************
-struct Production {
-	ProdEleVec			m_elements;
-
-	void				add(ProdEle*	ele)	{m_elements.append(ele);}
-	void				add(Terminal*	t)	{m_elements.append(new ProdEle(t));}
-	void				add(NonTerm*	n)	{m_elements.append(new ProdEle(n));}
+class Production : ProdEleVec {
+  public:
+	void				add(Terminal*	t)	{append(new ProdEle(t));}
+	void				add(NonTerm*	n)	{append(new ProdEle(n));}
 
 	comString&			printable(comString&	buf);
 };
@@ -75,7 +73,8 @@ class NonTerm {
 	void				addProduction(Terminal*	term);
 	void				addProduction(NonTerm*	nTerm);
 
-	const comString&	getName()	{return m_name;}
+	const comString&	getName() const	{return m_name;}
+	ProdVec&			getProductions()	{return m_productions;}
 
 	static void			dumpGrammar();
 
@@ -95,6 +94,10 @@ class ParseTree {
   public:
 						ParseTree(NonTerm*	nTerm);
 						ParseTree(Terminal*	term);
+
+	bool				isTerminal()	{return m_prodEle.m_isTerm;}
+	const Terminal*		getTerminal()	{return m_prodEle.m_term;}
+	const NonTerm*		getNonTerm()	{return m_prodEle.m_nonTerm;}
 
   private:
 	ParseTree*			m_children[6];

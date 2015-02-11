@@ -30,7 +30,7 @@ class comVector {
 	const T&			operator[](const UINT	index) const;
 	UINT				getNumEntries()	const {return m_numEntries;}
 
-  private:
+  protected:
 	UINT				m_numEntries;
 	UINT				m_size;
 	T*					m_data;

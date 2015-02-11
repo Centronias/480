@@ -142,8 +142,8 @@ Production::printable(comString&	buf)
 	char	printBuffer[128];
 	char*	loc = printBuffer;
 
-	for (UINT i = 0; i < m_elements.getNumEntries(); i++)
-		loc += sprintf(loc, "%s ", (const char*) m_elements[i]->toString());
+	for (UINT i = 0; i < getNumEntries(); i++)
+		loc += sprintf(loc, "%s ", (const char*) m_data[i]->toString());
 
 	buf = printBuffer;
 	return buf;
