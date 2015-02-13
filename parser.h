@@ -26,10 +26,14 @@ class Parser {
 	static bool			parse(TokListIter&	tIter,
 							  ParseTree*	tree,
 							  UINT&			tokensParsed);
+	static void			generate();
 
 	static void			printTree();
 
   private:
+  	static ParseTree*	generate(ParseTree*	tree,
+  								 FILE*		file);
+
 	static NonTerm*		m_entrySymbol;
 	static ParseTree*	m_tree;
 };

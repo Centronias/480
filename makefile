@@ -39,11 +39,16 @@ debug: compiler
 	-./compiler $(RUNFLAGS) stutest2.in > debug.out
 	cat debug.out
 
-fsaDump.out: compiler
+fsa: compiler
 	./compiler -f
 
-grammarDump.out: compiler
+grammar: compiler
 	./compiler -g
+
+tree: compiler
+	./compiler -t
+	cat source.out >> gen.out
+	rm -f source.out
 
 proftest.out: compiler
 	cat $(PROFTEST)

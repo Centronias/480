@@ -17,6 +17,8 @@
 #include <unistd.h>
 #include </usr/include/ctype.h>
 #include <stdlib.h>
+#include <time.h>
+#include <stdlib.h>
 
 
 

@@ -33,11 +33,13 @@ class Global {
 	static bool			isDebug()	{return m_debug;}
 	static bool			isDumpFSA()	{return m_dumpFSA;}
 	static bool			isDumpGrammar()	{return m_dumpGrammar;}
+	static bool			isGenerateTree()	{return m_generateTree;}
 
   private:
 	static bool			m_debug;
 	static bool			m_dumpFSA;
 	static bool			m_dumpGrammar;
+	static bool			m_generateTree;
 };
 
 

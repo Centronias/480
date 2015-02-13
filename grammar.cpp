@@ -243,9 +243,9 @@ ParseTree::cullChildren()
 // ParseTree::print()
 // ****************************************************************************
 void
-ParseTree::print()
+ParseTree::print(const comString&	filename)
 {
-	FILE*	file = fopen("tree.out", "w");
+	FILE*	file = fopen((const char*) filename, "w");
 	this->print(0, file);
 	fclose(file);
 }

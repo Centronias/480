@@ -19,6 +19,7 @@
 // Static Member Initialization
 // ****************************************************************************
 comString	Token::m_typeNames[];
+comString	Token::m_examples[];
 
 
 
@@ -68,4 +69,15 @@ Token::init()
 	m_typeNames[Token::IntConst]	= "Int";
 	m_typeNames[Token::StrConst]	= "String";
 	m_typeNames[Token::Identifier]	= "Id";
+
+	m_examples[Token::NONE]			= "";
+	m_examples[Token::Operator]		= "+";
+	m_examples[Token::PrimType]		= "int";
+	m_examples[Token::StmtWord]		= "if";
+	m_examples[Token::Paren]		= "(";
+	m_examples[Token::BoolConst]	= "true";
+	m_examples[Token::RealConst]	= "10e9";
+	m_examples[Token::IntConst]		= "24";
+	m_examples[Token::StrConst]		= "\"I am a robot\"";
+	m_examples[Token::Identifier]	= "var";
 }

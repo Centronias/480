@@ -141,6 +141,7 @@ comDList<T>::append(const T&	element)
 	comDListLink<T>*	next = new comDListLink<T>(element);
 	if (m_last) {
 		m_last->m_next = next;
+		next->m_prev = m_last;
 		m_last = next;
 	} else {
 		m_first = next;

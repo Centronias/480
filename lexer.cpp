@@ -475,32 +475,4 @@ Lexer::printTokens()
 			   (const char*) Token::getTypeName(token->getType()),
 			   (const char*) token->getSpelling());
 	}
-
-	printf("\n\n");
-
-	while ((token = iter.prev())) {
-		printf("(%s : \"%s\")",
-			   (const char*) Token::getTypeName(token->getType()),
-			   (const char*) token->getSpelling());
-	}
-
-	printf("\n\n");
-
-	TokListIter		test(m_tokens);
-
-	while ((token = test.next())) {
-		printf("(%s : \"%s\")",
-			   (const char*) Token::getTypeName(token->getType()),
-			   (const char*) token->getSpelling());
-	}
-
-	printf("\n\n");
-
-	while ((token = iter.prev())) {
-		printf("(%s : \"%s\")",
-			   (const char*) Token::getTypeName(token->getType()),
-			   (const char*) token->getSpelling());
-	}
-
-	printf("\n\n");
 }
