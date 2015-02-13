@@ -28,11 +28,16 @@ clean:
 
 stutest.out: compiler
 	cat stutest1.in
-	-./compiler $(RUNFLAGS) stutest1.in > stutest1.out
+	-./compiler $(RUNFLAGS) stutest1.in > stutest1.out 2>&1
 	cat stutest1.out
 #	cat stutest2.in
 #	-./compiler stutest2.in > stutest2.out
 #	cat stutest2.out
+
+debug: compiler
+	cat stutest2.in
+	-./compiler $(RUNFLAGS) stutest2.in > debug.out
+	cat debug.out
 
 fsaDump.out: compiler
 	./compiler -f

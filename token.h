@@ -38,10 +38,12 @@ class Token {
 							Token(Token::Type		type,
 								  const comString&	spelling,
 								  UINT				line);
+							~Token()	{printf("DELETING TOKEN");}
 
 	const Type				getType() const	{return m_type;}
 	const comString&		getSpelling() const	{return m_spelling;}
 	UINT					getLine() const	{return m_line;}
+	comString&				printable(comString&	buf);
 
 	static void				init();
 	static const comString&	getTypeName(Type	type) {return m_typeNames[type];}

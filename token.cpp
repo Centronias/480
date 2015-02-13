@@ -37,12 +37,28 @@ Token::Token(Token::Type		type,
 
 
 // ****************************************************************************
+// printable()
+// ****************************************************************************
+comString&
+Token::printable(comString&	buf)
+{
+	char	printBuffer[128];
+
+	sprintf(printBuffer, "(%s : \"%s\")", (const char*) getTypeName(m_type), (const char*) m_spelling);
+
+	buf = printBuffer;
+	return buf;
+}
+
+
+
+// ****************************************************************************
 // init()
 // ****************************************************************************
 void
 Token::init()
 {
-	m_typeNames[Token::NONE]		= "INVALID TOKEN: NONE";
+	m_typeNames[Token::NONE]		= "NONE";
 	m_typeNames[Token::Operator]	= "operator";
 	m_typeNames[Token::PrimType]	= "Prim";
 	m_typeNames[Token::StmtWord]	= "Statment";

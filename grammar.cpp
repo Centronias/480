@@ -115,6 +115,8 @@ NonTerm::dumpGrammar()
 		for (UINT j = 0; j < nTerm->m_productions.getNumEntries(); j++)
 			fprintf(file, "\t%s\n", (const char*) nTerm->m_productions[j]->printable(printable));
 	}
+
+	fclose(file);
 }
 
 
@@ -145,6 +147,8 @@ Production::printable(comString&	buf)
 	for (UINT i = 0; i < getNumEntries(); i++)
 		loc += sprintf(loc, "%s ", (const char*) m_data[i]->toString());
 
+	*(loc - 1) = '\0';
+
 	buf = printBuffer;
 	return buf;
 }
@@ -157,17 +161,113 @@ Production::printable(comString&	buf)
 ParseTree::ParseTree(NonTerm*	nTerm)
 :	m_prodEle(nTerm),
 	m_numChildren(0),
-	m_production(NULL)
+	m_production(NULL),
+	m_token(NULL)
 {
 	for (UINT i = 0; i < 6; i++)
 		m_children[i] = NULL;
 }
 
-ParseTree::ParseTree(Terminal*	term)
+ParseTree::ParseTree(Terminal*	term,
+					 Token*		token)
 :	m_prodEle(term),
 	m_numChildren(0),
-	m_production(NULL)
+	m_production(NULL),
+	m_token(token)
 {
 	for (UINT i = 0; i < 6; i++)
 		m_children[i] = NULL;
+}
+
+
+
+// ****************************************************************************
+// Terminal::matches()
+// ****************************************************************************
+bool
+Terminal::matches(const Token*	token)
+{
+	if (token->getType() != m_tType)
+		return false;
+
+	if (m_spelling != "")
+		return m_spelling == token->getSpelling();
+
+	return true;
+}
+
+
+
+// ****************************************************************************
+// ParseTree::addChild()
+// ****************************************************************************
+void
+ParseTree::addChild(ParseTree*	child)
+{
+	if (m_numChildren == 6) {
+		fprintf(stderr, "Attempted to add 7th child.\n");
+		Global::fail();
+	}
+
+	m_children[m_numChildren++] = child;
+}
+
+
+
+// ****************************************************************************
+// ParseTree::~ParseTree()
+// ****************************************************************************
+ParseTree::~ParseTree()
+{
+	for (UINT i = 0; i < m_numChildren; i++)
+		delete m_children[i];
+}
+
+
+
+// ****************************************************************************
+// ParseTree::cullChildren()
+// ****************************************************************************
+void
+ParseTree::cullChildren()
+{
+	for (UINT i = 0; i < m_numChildren; i++)
+		delete m_children[i];
+
+	m_numChildren = 0;
+}
+
+
+
+// ****************************************************************************
+// ParseTree::print()
+// ****************************************************************************
+void
+ParseTree::print()
+{
+	FILE*	file = fopen("tree.out", "w");
+	this->print(0, file);
+	fclose(file);
+}
+
+void
+ParseTree::print(UINT	level,
+				 FILE*	file)
+{
+	comString	printable("");
+
+	for (UINT i = 0; i < level; i++)
+		fprintf(file, "\t");
+
+	fprintf(file, "%s :", (const char*) m_prodEle.toString());
+
+	if (m_production)
+		fprintf(file, " %s\n", (const char*) m_production->printable(printable));
+	else if (m_token)
+		fprintf(file, " %s\n", (const char*) m_token->printable(printable));
+	else
+		fprintf(file, "\n");
+
+	for (UINT i = 0; i < m_numChildren; i++)
+		m_children[i]->print(level + 1, file);
 }

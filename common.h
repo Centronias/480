@@ -44,9 +44,9 @@ class NonTerm;
 class Parser;
 class ParseTree;
 class Production;
+class Terminal;
 struct Transition;
 struct ProdEle;
-struct Terminal;
 
 
 

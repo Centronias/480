@@ -44,7 +44,9 @@ void
 Global::run(int		argc,
 			char**	argv)
 {
-	printf("Running compiler\n\n");
+	printf("\n////////////////////////////////////////////////////////////\n");
+	printf("\tRunning compiler\n");
+	printf("////////////////////////////////////////////////////////////\n\n");
 
 	char	input[PATH_MAX];
 
@@ -55,6 +57,7 @@ Global::run(int		argc,
 	Lexer::run(comString(input));
 	Lexer::printTokens();
 //	Parser::run();
+//	Parser::printTree();
 }
 
 
@@ -116,7 +119,9 @@ Global::readCmdLine(int		argc,
 void
 Global::fail()
 {
-	fprintf(stderr, "\n\nEncountered error. Exiting.\n");
+	printf("\n\n////////////////////////////////////////////////////////////\n");
+	printf("\tEncountered error, exiting.\n");
+	printf("////////////////////////////////////////////////////////////\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -128,6 +133,8 @@ Global::fail()
 void
 Global::succeed()
 {
-	printf("\n\nExiting compiler\n");
+	printf("\n\n////////////////////////////////////////////////////////////\n");
+	printf("\tRunning compiler\n");
+	printf("////////////////////////////////////////////////////////////\n");
 	exit(EXIT_SUCCESS);
 }

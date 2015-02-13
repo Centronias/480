@@ -19,6 +19,7 @@
 // Initialize Static Members
 // ****************************************************************************
 NonTerm*	Parser::m_entrySymbol;
+ParseTree*	Parser::m_tree;
 
 
 
@@ -54,10 +55,10 @@ Parser::init()
 	binOps.append(new Terminal(Token::Operator, "and"));
 
 	comVector<Terminal*>	unOps;
-	unOps(new Terminal(Token::Operator, "not"));
-	unOps(new Terminal(Token::Operator, "sin"));
-	unOps(new Terminal(Token::Operator, "cos"));
-	unOps(new Terminal(Token::Operator, "tan"));
+	unOps.append(new Terminal(Token::Operator, "not"));
+	unOps.append(new Terminal(Token::Operator, "sin"));
+	unOps.append(new Terminal(Token::Operator, "cos"));
+	unOps.append(new Terminal(Token::Operator, "tan"));
 
 	Terminal*	constStr	= new Terminal(Token::StrConst);
 	Terminal*	constInt	= new Terminal(Token::IntConst);
@@ -201,10 +202,10 @@ Parser::init()
 	// OPER_MINUS Productions
 	// ----------------------------------------------------
 	// OPER_MINUS -> RESR
-	OPER_MINUS->addProduction(RESR);
+	OPERM->addProduction(RESR);
 
 	// OPER_MINUS -> epsilon
-	OPER_MINUS->addProduction(epsilon);
+	OPERM->addProduction(epsilon);
 
 	// ----------------------------------------------------
 	// STMTS Productions
@@ -270,7 +271,7 @@ Parser::init()
 	prod->add(open);
 	prod->add(iden);
 	prod->add(typeName);
-	prod->add(close;
+	prod->add(close);
 	prod->add(VLISTC);
 	VLIST->addProduction(prod);
 
@@ -296,12 +297,26 @@ Parser::init()
 void
 Parser::run()
 {
+	printf("Running parser.\n");
+
 	// Construct our parse tree. The top level non terminal is S
-	ParseTree*	tree = new ParseTree(m_entrySymbol);
+	m_tree = new ParseTree(m_entrySymbol);
 
 	// Prepare to iterate over the tokens.
-	TokList&	tokens = Lexer::getTokens();
-	TokListIter	iter(tokens);
+	TokListIter	iter(Lexer::getTokens());
+	UINT		tokensParsed;
+
+	if (parse(iter, m_tree, tokensParsed)) {
+		if (!iter.next()) {
+			printf("Done running parser.\n");
+		} else {
+			fprintf(stderr, "Failed to parse all tokens.\n");
+//			Global::fail();
+		}
+	} else {
+		fprintf(stderr, "Failed to parse tokens\n");
+		Global::fail();
+	}
 }
 
 
@@ -314,7 +329,9 @@ Parser::parse(TokListIter&	iter,
 			  ParseTree*	tree,
 			  UINT&			tokensParsed)
 {
-/*	Token*	token = NULL;
+	printf(">\t(%s): Entering\t\t\t(%p)\n", (const char*) tree->getDesc(), tree);
+
+	comString	printable;
 
 	if (tree->isTerminal()) {
 		// If this is a terminal node, something went wrong.
@@ -329,27 +346,108 @@ Parser::parse(TokListIter&	iter,
 		for (UINT i = 0; i < prods.getNumEntries(); i++) {
 			// For each production, loop through the elements and...
 			Production*	prod		= prods[i];
-			bool		prodSuccess	= false;
+			bool		prodSuccess	= true;
+			UINT		tokensConsumed = 0;
 
-			for (UINT j = 0; j < prod.getNumEntries(); j++) {
-				ProdEle*	pe = prod[j];
+			printf("\tPrd: \"%s\"\n", (const char*) prod->printable(printable));
+
+			for (UINT j = 0; j < prod->getNumEntries(); j++) {
+				ProdEle*	pe = prod->get(j);
+
+				printf("\t\t%s : ", (const char*) pe->toString());
 
 				if (pe->m_isTerm) {
-					// If the element is a terminal, check it against the next
-					// token from the iterator.
-					// TODO:
-				} else {
-					// If the element is not a terminal, create a new tree
-					// branch for this nonterminal and recurse.
-					// TODO:
-				}
+					if (pe->m_term->m_tType == Token::NONE) {
+						// If the nonterminal is an epsilon, effectively ignore
+						// it, consuming no tokens.
+						printf("skipping\n");
+						continue;
+					}
 
-				if (j == prod.getNumEntries() - 1) {
-					// If we're here, we have successfully parsed the entire
-					// production and it is a good match.
-					prodSuccess = true;
+					Token*	token = iter.next();
+
+					if (token) {
+						tokensConsumed++;
+						printf("%s, ", (const char*) token->printable(printable));
+					} else {
+						printf("no token, ");
+					}
+
+					if (!token || !pe->m_term->matches(token)) {
+						// If the next token does not match the production,
+						// this production is not appropriate.
+						printf("no match\n");
+						prodSuccess = false;
+						break;
+					} else {
+						printf("match. Adding new tree to (%p)\n", tree);
+						tree->addChild(new ParseTree(pe->m_term, token));
+					}
+				} else {
+					// If the element is not a terminal, create a new tree for
+					// this nonterminal and recurse. Also keep track of how
+					// many tokens this recursion consumes in case we need to
+					// roll back the iterator later.
+					ParseTree*	child = new ParseTree(pe->m_nonTerm);
+					UINT		recurseParsed = 0;
+
+					printf("\n");
+
+					if (parse(iter, child, recurseParsed)) {
+						// If the recursive parse succeeded, add the number of
+						// newly parsed tokens to the tokens consumed count and
+						// attach the child tree to the current tree.
+						tree->addChild(child);
+						tokensConsumed += recurseParsed;
+					} else {
+						// If the recursive parse failed, this production is
+						// not appropriate.
+						delete child;
+						prodSuccess = false;
+						break;
+					}
 				}
 			}
+
+			if (prodSuccess) {
+				// If the current production worked the whole way through, set
+				// this production as this tree's production, add the number of
+				// tokens consumed by the production to the number of tokens
+				// parsed and return.
+				tree->setProduction(prod);
+				tokensParsed += tokensConsumed;
+				printf("<\t(%s): Exit success\t\t\t(%p)\n", (const char*) tree->getDesc(), tree);
+				return true;
+			} else {
+				// If the current production did not succeed, roll back the
+				// iterator based on the number of tokens consumed and remove
+				// any child trees from the current tree.
+				printf("\tUnsuc Prd, rolling back %d tokens and culling children\n", tokensConsumed);
+				for (UINT j = 0; j < tokensConsumed; j++) {
+					Token*	token = iter.prev();
+					printf("\t\t%s\n", token ? (const char*) token->printable(printable) : "NULL TOKEN");
+				}
+				tree->cullChildren();
+			}
 		}
-	}*/
+	}
+
+	// If we are here, we have gone through all of this nonterminal's
+	// productions and gotten a parse out of it.
+	printf("<\t(%s): Exit failure\t\t\t(%p)\n", (const char*) tree->getDesc(), tree);
+	return false;
+}
+
+
+
+// ****************************************************************************
+// printTree()
+// ****************************************************************************
+void
+Parser::printTree()
+{
+	if (m_tree)
+		m_tree->print();
+	else
+		printf("No tree to print");
 }

@@ -28,6 +28,7 @@ class comVector {
 	void				append(const T&	element);
 	T&					operator[](const UINT	index);
 	const T&			operator[](const UINT	index) const;
+	T&					get(const UINT	index);
 	UINT				getNumEntries()	const {return m_numEntries;}
 
   protected:
@@ -84,6 +85,7 @@ comVector<T>::append(const T&	element)
 
 // ****************************************************************************
 // operator[]()
+// get()
 // ****************************************************************************
 template <class T>
 T&
@@ -95,6 +97,13 @@ comVector<T>::operator[](const UINT	index)
 template <class T>
 const T&
 comVector<T>::operator[](const UINT	index) const
+{
+	return m_data[index];
+}
+
+template <class T>
+T&
+comVector<T>::get(const UINT	index)
 {
 	return m_data[index];
 }

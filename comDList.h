@@ -164,8 +164,8 @@ comDListIter<T>::next()
 		return NULL;
 
 	comDListLink<T>*	ret	= m_next;
-		m_prev	= ret;
-		m_next	= ret->m_next;
+	m_prev	= ret;
+	m_next	= ret->m_next;
 	return ret->m_data;
 }
 
@@ -177,10 +177,8 @@ comDListIter<T>::prev()
 		return NULL;
 
 	comDListLink<T>*	ret	= m_prev;
-	if (ret) {
-		m_next	= ret;
-		m_prev	= ret->m_prev;
-	}
+	m_next	= ret;
+	m_prev	= ret->m_prev;
 	return ret->m_data;
 }
 

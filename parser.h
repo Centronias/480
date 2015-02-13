@@ -27,8 +27,11 @@ class Parser {
 							  ParseTree*	tree,
 							  UINT&			tokensParsed);
 
+	static void			printTree();
+
   private:
 	static NonTerm*		m_entrySymbol;
+	static ParseTree*	m_tree;
 };
 
 
