@@ -1,60 +1,131 @@
 S
-	( )
-	( S )
-	S S
-	EXPR
+	( S_PAR ) S_REC
+	string S_REC
+	int S_REC
+	float S_REC
+	bool S_REC
+	id S_REC
+S_PAR
+	( S_PAR ) S_REC
+	string S_REC
+	int S_REC
+	float S_REC
+	bool S_REC
+	id S_REC
+	:= id RESR
+	+ RESR RESR
+	- RESR RESR_MIN
+	* RESR RESR
+	/ RESR RESR
+	% RESR RESR
+	^ RESR RESR
+	= RESR RESR
+	> RESR RESR
+	>= RESR RESR
+	< RESR RESR
+	<= RESR RESR
+	!= RESR RESR
+	or RESR RESR
+	and RESR RESR
+	not RESR
+	sin RESR
+	cos RESR
+	tan RESR
+	if EXPR EXPR ELSE
+	while EXPR EXPR EXPRLIST
+	let ( ( id type ) VARLIST )
+	stdout RESR
+	~
+S_REC
+	( S_PAR ) S_REC
+	string S_REC
+	int S_REC
+	float S_REC
+	bool S_REC
+	id S_REC
+	~
 EXPR
-	OPER
-	STMTS
-OPER
-	( := id OPER )
-	( BINOPS OPER OPER )
-	( UNOPS OPER )
-	CONSTS
-	id
-BINOPS
-	+
-	-
-	*
-	/
-	%
-	^
-	=
-	>
-	>=
-	<
-	<=
-	!=
-	or
-	and
-UNOPS
-	-
-	not
-	sin
-	cos
-	tan
-CONSTS
+	( EXPR_PAR )
 	string
 	int
 	float
 	bool
-STMTS
-	IFSTMTS
-	WHILESTMTS
-	LETSTMTS
-	PRINTSTMTS
-PRINTSTMTS
-	( stdout OPER )
-IFSTMTS
-	( if EXPR EXPR EXPR )
-	( if EXPR EXPR )
-WHILESTMTS
-	( while EXPR EXPRLIST )
+	id
+EXPR_PAR
+	:= id RESR
+	+ RESR RESR
+	- RESR RESR_MIN
+	* RESR RESR
+	/ RESR RESR
+	% RESR RESR
+	^ RESR RESR
+	= RESR RESR
+	> RESR RESR
+	>= RESR RESR
+	< RESR RESR
+	<= RESR RESR
+	!= RESR RESR
+	or RESR RESR
+	and RESR RESR
+	not RESR
+	sin RESR
+	cos RESR
+	tan RESR
+	if EXPR EXPR ELSE
+	while EXPR EXPR EXPRLIST
+	let ( ( id type ) VARLIST )
+	stdout RESR
+RESR
+	( OPER )
+	string
+	int
+	float
+	bool
+	id
+OPER
+	:= id RESR
+	+ RESR RESR
+	- RESR RESR_MIN
+	* RESR RESR
+	/ RESR RESR
+	% RESR RESR
+	^ RESR RESR
+	= RESR RESR
+	> RESR RESR
+	>= RESR RESR
+	< RESR RESR
+	<= RESR RESR
+	!= RESR RESR
+	or RESR RESR
+	and RESR RESR
+	not RESR
+	sin RESR
+	cos RESR
+	tan RESR
+RESR_MIN
+	( OPER )
+	string
+	int
+	float
+	bool
+	id
+	~
 EXPRLIST
-	EXPR
-	EXPR EXPRLIST
-LETSTMTS
-	( let ( VARLIST ) )
+	( EXPR_PAR ) EXPRLIST
+	string EXPRLIST
+	int EXPRLIST
+	float EXPRLIST
+	bool EXPRLIST
+	id EXPRLIST
+	~
 VARLIST
-	( id type )
-	( ( id type ) VARLIST )
+	( id type ) VARLIST
+	~
+ELSE
+	( EXPR_PAR )
+	string
+	int
+	float
+	bool
+	id
+	~

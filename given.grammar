@@ -57,4 +57,4 @@ LETSTMTS
 	( let ( VARLIST ) )
 VARLIST
 	( id type )
-	( ( id type ) VARLIST )
+	( id type ) VARLIST

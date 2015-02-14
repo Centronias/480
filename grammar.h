@@ -116,7 +116,7 @@ class ParseTree {
 	void				print(UINT	level,
 							  FILE*	file);
 
-	ParseTree*			m_children[6];
+	ParseTree*			m_children[PT_MAX_CHILDREN];
 	ProdEle				m_prodEle;
 	UINT				m_numChildren;
 	Production*			m_production;

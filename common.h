@@ -28,6 +28,8 @@
 #define UINT	unsigned int
 #define BYTE	unsigned char
 
+#define PT_MAX_CHILDREN	10
+
 
 
 // ****************************************************************************

@@ -55,6 +55,14 @@ tree: compiler
 	cat source.out >> gen.out
 	rm -f source.out
 
+gperfect: compiler given.grammar
+	./compiler -t -b given.grammar
+	echo "" >> test.ibtl
+	cat source.out >> test.ibtl
+
+tperfect: compiler test.ibtl
+	./compiler -b mod.grammar test.ibtl
+
 proftest.out: compiler
 	cat $(PROFTEST)
 	compiler $(PROFTEST) > proftest.out

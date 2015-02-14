@@ -165,7 +165,7 @@ ParseTree::ParseTree(NonTerm*	nTerm)
 	m_production(NULL),
 	m_token(NULL)
 {
-	for (UINT i = 0; i < 6; i++)
+	for (UINT i = 0; i < PT_MAX_CHILDREN; i++)
 		m_children[i] = NULL;
 }
 
@@ -176,7 +176,7 @@ ParseTree::ParseTree(Terminal*	term,
 	m_production(NULL),
 	m_token(token)
 {
-	for (UINT i = 0; i < 6; i++)
+	for (UINT i = 0; i < PT_MAX_CHILDREN; i++)
 		m_children[i] = NULL;
 }
 
@@ -205,8 +205,8 @@ Terminal::matches(const Token*	token)
 void
 ParseTree::addChild(ParseTree*	child)
 {
-	if (m_numChildren == 6) {
-		fprintf(stderr, "Attempted to add 7th child.\n");
+	if (m_numChildren == PT_MAX_CHILDREN) {
+		fprintf(stderr, "Attempted to add too many children.\n");
 		Global::fail();
 	}
 
