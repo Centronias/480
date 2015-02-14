@@ -104,7 +104,8 @@ NonTerm::addProduction(NonTerm*	nTerm)
 void
 NonTerm::dumpGrammar()
 {
-	FILE*	file = fopen("grammardump.out", "w");
+	printf("Dumping grammar to file.");
+	FILE*	file = fopen("grammar.out", "w");
 	comString	printable("");
 
 	for (UINT i = 0; i < m_nTerms.getNumEntries(); i++) {

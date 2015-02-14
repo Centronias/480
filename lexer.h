@@ -21,11 +21,9 @@
 // ****************************************************************************
 class Lexer {
   public:
-	static void			readCmdLine(int		argc,
-									char**	argv,
-									char*	inFile);
 	static void			init();
 	static void			run(const comString&	inFile);
+	static Token*		tokenize(const comString&	spelling);
 
 	static TokList&		getTokens()	{return m_tokens;}
 	static void			printTokens();

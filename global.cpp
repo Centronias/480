@@ -47,17 +47,33 @@ void
 Global::run(int		argc,
 			char**	argv)
 {
-	printf("\n////////////////////////////////////////////////////////////\n");
-	printf("\tRunning compiler\n");
-	printf("////////////////////////////////////////////////////////////\n\n");
-
 	char	input[PATH_MAX];
+	char	grammar[PATH_MAX];
+	*input		= '\0';
+	*grammar	= '\0';
 
-	Global::readCmdLine(argc, argv, input);
+	Global::readCmdLine(argc, argv, input, grammar);
+
+	printf("\n////////////////////////////////////////////////////////////\n");
+	printf("\tRunning compiler");
+	if (*input)
+		printf(" on \"%s\"", input);
+	if (m_debug)
+		printf("\n\tDebugging on");
+	if (m_dumpFSA)
+		printf("\n\tDumping FSA to fsa.out");
+	if (m_generateTree)
+		printf("\n\tGenerating tree and writing to gen.out");
+	if (m_dumpGrammar)
+		printf("\n\tDumping grammar to grammar.out");
+	if (*grammar)
+		printf("\n\tBuilding grammar from \"%s\"", grammar);
+	printf("\n////////////////////////////////////////////////////////////\n\n");
+
 	Lexer::init();
-	Parser::init();
+	Parser::init(grammar);
 
-	Lexer::run(comString(input));
+	Lexer::run(input);
 	Parser::run();
 	Parser::printTree();
 }
@@ -73,30 +89,31 @@ Global::run(int		argc,
 void
 Global::readCmdLine(int		argc,
 				   char**	argv,
-				   char*	inFile)
+				   char*	inFile,
+				   char*	grammarFile)
 {
 	opterr = 0;
 
 	char c;
-	while ( (c = getopt(argc, argv, "dfgt")) != -1 ) {
+	while ( (c = getopt(argc, argv, "dfgtb:")) != -1 ) {
 		switch (c) {
 		  case 'd':
 			m_debug = true;
 			break;
 		  case 'f':
 			m_dumpFSA = true;
-			printf("FSA dump on\n");
 			break;
 		  case 'g':
 			m_dumpGrammar = true;
-			printf("Grammar dump on\n");
 			break;
 		  case 't':
 			m_generateTree = true;
-			printf("Tree generation on\n");
+			break;
+		  case 'b':
+			strncpy(grammarFile, optarg, PATH_MAX);
 			break;
 		  case '?':
-			if (optopt == 'c')
+			if (optopt == 'b')
 				fprintf(stderr, "Option -%c requires an argument.\n", optopt);
 			else if (isprint(optopt))
 				fprintf(stderr, "Unknown option '-%c'.\n", optopt);
@@ -109,7 +126,11 @@ Global::readCmdLine(int		argc,
 	}
 
 	if (!m_dumpFSA && !m_dumpGrammar && !m_generateTree && (argv[optind] == NULL)) {
-		fprintf(stderr, "Usage:\n\tcompiler <input file>\n\tcompiler -f\t\t(Dumps the FSA)\n\tcompiler -g\t\t(Dumps the grammar)\n");
+		fprintf(stderr, "Usage:\n");
+		fprintf(stderr, "\tcompiler [-b <grammar file>] <input file>\n");
+		fprintf(stderr, "\tcompiler -f\t\t\t\t\t\t(Dumps the FSA to fsa.out)\n");
+		fprintf(stderr, "\tcompiler [-b <grammar file>] -g\t\t\t\t(Dumps the grammar to grammar.out)\n");
+		fprintf(stderr, "\tcompiler -t\t\t\t\t\t\t(Generates a random parse tree to gen.out)\n");
 		exit(EXIT_FAILURE);
 	}
 

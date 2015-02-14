@@ -476,3 +476,46 @@ Lexer::printTokens()
 			   (const char*) token->getSpelling());
 	}
 }
+
+
+
+// ****************************************************************************
+// Lexer::tokenize()
+//
+// This method attempts to tokenize all of the characters in a given string
+// into a single token.
+// ****************************************************************************
+Token*
+Lexer::tokenize(const comString&	spelling)
+{
+	const State*	curr = m_entryState;
+	const State*	next = NULL;
+	char 			buf[64];
+	char*			loc = buf;
+	strcpy(buf, (const char*) spelling);
+
+	// Read through each character in the spelling.
+	while (*loc) {
+		if ((next = curr->transition(*loc))) {
+			// If we can transition, do so and loop.
+			loc++;
+			curr = next;
+		} else {
+			// There is no transition and we have a current non-null character.
+			return NULL;
+		}
+	}
+
+	// We're at the end of the string. If there is a finalization, accept and
+	// make a token.
+	if (curr->hasFinalization()) {
+		Token::Type	type = curr->getFinalization();
+		if (type == Token::Identifier)
+			type = checkKeyword(spelling);
+
+		return new Token(type, spelling, -1);
+	} else {
+		// Otherwise we can't tokenize.
+		return NULL;
+	}
+}

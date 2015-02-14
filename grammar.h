@@ -107,7 +107,7 @@ class ParseTree {
 	bool				isTerminal()	{return m_prodEle.m_isTerm;}
 	Terminal*			getTerminal()	{return m_prodEle.m_term;}
 	NonTerm*			getNonTerm()	{return m_prodEle.m_nonTerm;}
-	void				print()	{printf("tree.out");}
+	void				print()	{print("tree.out");}
 	void				print(const comString&	filename);
 	const comString&	getDesc()	{return m_prodEle.toString();}
 

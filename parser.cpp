@@ -27,9 +27,401 @@ ParseTree*	Parser::m_tree;
 // init()
 // ****************************************************************************
 void
-Parser::init()
+Parser::init(const comString&	file)
 {
 	printf("Initializing parser.\n");
+
+	if (file != "")
+		buildGrammar(file);
+	else
+		builtinGrammar();
+
+	// If we are running in a special parser mode, do that and then exit.
+	if (Global::isDumpGrammar()) {
+		NonTerm::dumpGrammar();
+		Global::succeed();
+	} else if (Global::isGenerateTree()) {
+		generate();
+		Global::succeed();
+	}
+}
+
+
+
+// ****************************************************************************
+// run()
+// ****************************************************************************
+void
+Parser::run()
+{
+	printf("Running parser.\n");
+
+	// Construct our parse tree. The top level non terminal is S
+	m_tree = new ParseTree(m_entrySymbol);
+
+	// Prepare to iterate over the tokens.
+	TokListIter	iter(Lexer::getTokens());
+	UINT		tokensParsed;
+
+	if (parse(iter, m_tree, tokensParsed)) {
+		if (!iter.next()) {
+			printf("Done running parser.\n");
+		} else {
+			fprintf(stderr, "Failed to parse all tokens.\n");
+			Global::fail();
+		}
+	} else {
+		fprintf(stderr, "Failed to parse tokens\n");
+		Global::fail();
+	}
+}
+
+
+
+// ****************************************************************************
+// parse()
+// ****************************************************************************
+bool
+Parser::parse(TokListIter&	iter,
+			  ParseTree*	tree,
+			  UINT&			tokensParsed)
+{
+	Token*		token;
+
+	if (tree->isTerminal()) {
+		// If this is a terminal node, something went wrong.
+		Global::fail();
+	} else {
+		// This is a non terminal node, so get the productions and loop through
+		// them.
+		NonTerm*	nTerm = tree->getNonTerm();
+		ProdVec&	prods = nTerm->getProductions();
+
+		for (UINT i = 0; i < prods.getNumEntries(); i++) {
+			// For each production, loop through the elements and...
+			Production*	prod			= prods[i];
+			bool		prodSuccess		= true;
+			UINT		tokensConsumed	= 0;
+
+			for (UINT j = 0; j < prod->getNumEntries(); j++) {
+				ProdEle*	pe = prod->get(j);
+
+				if (pe->m_isTerm) {
+					if (pe->m_term->m_tType == Token::NONE) {
+						// If the nonterminal is an epsilon, effectively ignore
+						// it, consuming no tokens.
+						continue;
+					}
+
+					if ((token = iter.next()))
+						tokensConsumed++;
+
+					if (!token || !pe->m_term->matches(token)) {
+						// If the next token does not match the production,
+						// this production is not appropriate.
+						prodSuccess = false;
+						break;
+					} else {
+						tree->addChild(new ParseTree(pe->m_term, token));
+					}
+				} else {
+					// If the element is not a terminal, create a new tree for
+					// this nonterminal and recurse. Also keep track of how
+					// many tokens this recursion consumes in case we need to
+					// roll back the iterator later.
+					ParseTree*	child = new ParseTree(pe->m_nonTerm);
+					UINT		recurseParsed = 0;
+
+					if (parse(iter, child, recurseParsed)) {
+						// If the recursive parse succeeded, add the number of
+						// newly parsed tokens to the tokens consumed count and
+						// attach the child tree to the current tree.
+						tree->addChild(child);
+						tokensConsumed += recurseParsed;
+					} else {
+						// If the recursive parse failed, this production is
+						// not appropriate.
+						delete child;
+						prodSuccess = false;
+						break;
+					}
+				}
+			}
+
+			if (prodSuccess) {
+				// If the current production worked the whole way through, set
+				// this production as this tree's production, add the number of
+				// tokens consumed by the production to the number of tokens
+				// parsed and return.
+				tree->setProduction(prod);
+				tokensParsed += tokensConsumed;
+				return true;
+			} else {
+				// If the current production did not succeed, roll back the
+				// iterator based on the number of tokens consumed and remove
+				// any child trees from the current tree.
+				for (UINT j = 0; j < tokensConsumed; j++)
+					iter.prev();
+				tree->cullChildren();
+			}
+		}
+	}
+
+	// If we are here, we have gone through all of this nonterminal's
+	// productions and gotten a parse out of it.
+	return false;
+}
+
+
+
+// ****************************************************************************
+// printTree()
+// ****************************************************************************
+void
+Parser::printTree()
+{
+	if (m_tree)
+		m_tree->print();
+	else
+		printf("No tree to print");
+}
+
+
+
+// ****************************************************************************
+// generate()
+// ****************************************************************************
+void
+Parser::generate()
+{
+	FILE*	source = fopen("source.out", "w");
+	fprintf(source, "\n\n");
+	ParseTree*	tree = generate(new ParseTree(m_entrySymbol), source);
+	tree->print("gen.out");
+	fclose(source);
+}
+
+ParseTree*
+Parser::generate(ParseTree*	tree,
+				 FILE*		file)
+{
+	// Choose a random production to use.
+	Production*	prod = tree->getNonTerm()->getProductions()[rand() % tree->getNonTerm()->getProductions().getNumEntries()];
+	tree->setProduction(prod);
+
+	// For each element in the production...
+	for (UINT j = 0; j < prod->getNumEntries(); j++) {
+		ProdEle*	pe = prod->get(j);
+
+		// If the element is a terminal...
+		if (pe->m_isTerm) {
+			if (pe->m_term->m_tType == Token::NONE) {
+				// If the element is an epsilon,  do nothing.
+				continue;
+			}
+
+			// Add the terminal to the tree.
+			const comString&	spelling = (pe->m_term->m_spelling != "") ? pe->m_term->m_spelling : Token::getExample(pe->m_term->m_tType);
+
+			tree->addChild(new ParseTree(pe->m_term, new Token(pe->m_term->m_tType, spelling, 0)));
+
+			fprintf(file, "%s ", (const char*) spelling);
+		} else {
+			// If the element is not a terminal, create a new tree for
+			// this nonterminal and recurse.
+			tree->addChild(generate(new ParseTree(pe->m_nonTerm), file));
+		}
+	}
+
+	return tree;
+}
+
+
+
+// ****************************************************************************
+// buildGrammar()
+// ****************************************************************************
+void
+Parser::buildGrammar(const comString&	filename)
+{
+	FILE*	input = fopen((const char*) filename, "r");
+	char	line[128];
+
+	if (!input) {
+		fprintf(stderr, "Grammar file \"%s\" failed to open.\n", (const char*) filename);
+		Global::fail();
+	}
+
+	comVector<NonTerm*>		nTerms;
+	comVector<Terminal*>	terms;
+
+	// Loop through each line of the file, looking for nonterminal
+	// declarations.
+	while (fgets(line, 128, input)) {
+		// Get rid of icky line breaks.
+		for (char*	loc = line; *loc; loc++) {
+			if (*loc == '\n' || *loc =='\r')
+				*loc = '\0';
+		}
+
+		// If the first character on the line is not a tab, the line is a
+		// nonterminal declaration.
+		if (*line != '\t')
+			nTerms.append(new NonTerm(line));
+	}
+
+	rewind(input);
+	NonTerm*	current = NULL;
+
+	// Loop through each line in the file, looking for productions.
+	while(fgets(line, 128, input)) {
+		// Get rid of icky line breaks.
+		for (char*	loc = line; *loc; loc++) {
+			if (*loc == '\n' || *loc =='\r')
+				*loc = '\0';
+		}
+
+		if (*line == '\t') {
+			// If the first character on the line is a tab, it is a production
+			// for the current nonterminal.
+			if (!current) {
+				fprintf(stderr, "Tried to parse a production without a nonterminal.");
+				Global::fail();
+			}
+
+			Production*	prod = new Production;
+			current->addProduction(prod);
+			char	buf[16];
+			char*	bLoc	= buf;
+
+
+			// Read out production elements seperated by single spaces and add
+			// them to the current production.
+			for (char* loc = line + 1; *(loc - 1) != '\0'; loc++) {
+				if (*loc == ' ' || *loc == '\0') {
+					// We've reached the end of the current production
+					// element's spelling. Look for it in the list of nonterms
+					// and then the list of terminals.
+					*bLoc = '\0';
+					bool found = false;
+
+					for (UINT i = 0; i < nTerms.getNumEntries(); i++) {
+						if (nTerms[i]->getName() == buf) {
+							prod->add(nTerms[i]);
+							bLoc = buf;
+							found = true;
+							break;
+						}
+					}
+
+					if (found)
+						continue;
+
+					for (UINT i = 0; i < terms.getNumEntries(); i++) {
+						if (termMatch(terms[i], buf)) {
+							prod->add(terms[i]);
+							bLoc = buf;
+							found = true;
+							break;
+						}
+					}
+
+					if (found)
+						continue;
+
+					// If we're here, this production element does not yet exist.
+					//Add it as a terminal.
+					Terminal*	term = makeTerminal(buf);
+					terms.append(term);
+					prod->add(term);
+					bLoc = buf;
+				} else {
+					// Copy the current character on the line into the buffer.
+					*(bLoc++) = *loc;
+				}
+			}
+		} else {
+			// The current line is a nonterm. Find it in the list of prepared
+			// nonterms and make it the current production.
+			line[strlen(line)] = '\0';
+			for (UINT i = 0; i < nTerms.getNumEntries(); i++) {
+				if (nTerms[i]->getName() == line) {
+					current = nTerms[i];
+					break;
+				}
+			}
+		}
+	}
+
+	// Check that all of the nonterminals have productions.
+	for (UINT i = 0; i < nTerms.getNumEntries(); i++) {
+		if (nTerms[i]->getProductions().getNumEntries() == 0) {
+			fprintf(stderr, "Nonterminal symbol \"%s\" has no productions.\n", (const char*) nTerms[i]->getName());
+			Global::fail();
+		}
+	}
+
+	// Assume the first symbol in the list is the entry symbol.
+	m_entrySymbol = nTerms[0];
+
+	fclose(input);
+}
+
+
+
+// ****************************************************************************
+// makeTerminal()
+// ****************************************************************************
+Terminal*
+Parser::makeTerminal(const comString&	spelling)
+{
+	if (spelling == "id")
+		return new Terminal(Token::Identifier);
+	if (spelling == "string")
+		return new Terminal(Token::StrConst);
+	if (spelling == "int")
+		return new Terminal(Token::IntConst);
+	if (spelling == "real")
+		return new Terminal(Token::RealConst);
+	if (spelling == "bool")
+		return new Terminal(Token::BoolConst);
+	if (spelling == "type")
+		return new Terminal(Token::PrimType);
+	if (spelling == "~" || spelling == "NONE")
+		return new Terminal(Token::NONE);
+
+	Token*	token = Lexer::tokenize(spelling);
+	if (!token) {
+		fprintf(stderr, "Failed to tokenize \"%s\"\n", (const char*) spelling);
+		Global::fail();
+	}
+
+	Terminal*	ret = new Terminal(token->getType(), token->getSpelling());
+	delete token;
+
+	return ret;
+}
+
+
+
+// ****************************************************************************
+// termMatch()
+// ****************************************************************************
+bool
+Parser::termMatch(Terminal*			term,
+				  const comString&	spelling)
+{
+	return term->m_spelling == spelling;
+}
+
+
+
+// ****************************************************************************
+// builtinGrammar()
+// ****************************************************************************
+void
+Parser::builtinGrammar()
+{
 
 	// Create the terminal symbols
 	Terminal*	open	= new Terminal(Token::Paren, "(");
@@ -280,206 +672,4 @@ Parser::init()
 
 	// VARLIST_CAP -> epsilon
 	VLISTC->addProduction(epsilon);
-
-
-	// If we are running in grammar dump mode, dump the grammar and exit.
-	if (Global::isDumpGrammar()) {
-		NonTerm::dumpGrammar();
-		Global::succeed();
-	}
-
-	if (Global::isGenerateTree()) {
-		generate();
-		Global::succeed();
-	}
-}
-
-
-
-// ****************************************************************************
-// run()
-// ****************************************************************************
-void
-Parser::run()
-{
-	printf("Running parser.\n");
-
-	// Construct our parse tree. The top level non terminal is S
-	m_tree = new ParseTree(m_entrySymbol);
-
-	// Prepare to iterate over the tokens.
-	TokListIter	iter(Lexer::getTokens());
-	UINT		tokensParsed;
-
-	if (parse(iter, m_tree, tokensParsed)) {
-		if (!iter.next()) {
-			printf("Done running parser.\n");
-		} else {
-			fprintf(stderr, "Failed to parse all tokens.\n");
-//			Global::fail();
-		}
-	} else {
-		fprintf(stderr, "Failed to parse tokens\n");
-		Global::fail();
-	}
-}
-
-
-
-// ****************************************************************************
-// parse()
-// ****************************************************************************
-bool
-Parser::parse(TokListIter&	iter,
-			  ParseTree*	tree,
-			  UINT&			tokensParsed)
-{
-	Token*		token;
-
-	if (tree->isTerminal()) {
-		// If this is a terminal node, something went wrong.
-		Global::fail();
-	} else {
-		// This is a non terminal node, so get the productions and loop through
-		// them.
-		NonTerm*	nTerm = tree->getNonTerm();
-		ProdVec&	prods = nTerm->getProductions();
-
-		for (UINT i = 0; i < prods.getNumEntries(); i++) {
-			// For each production, loop through the elements and...
-			Production*	prod			= prods[i];
-			bool		prodSuccess		= true;
-			UINT		tokensConsumed	= 0;
-
-			for (UINT j = 0; j < prod->getNumEntries(); j++) {
-				ProdEle*	pe = prod->get(j);
-
-				if (pe->m_isTerm) {
-					if (pe->m_term->m_tType == Token::NONE) {
-						// If the nonterminal is an epsilon, effectively ignore
-						// it, consuming no tokens.
-						continue;
-					}
-
-					if ((token = iter.next()))
-						tokensConsumed++;
-
-					if (!token || !pe->m_term->matches(token)) {
-						// If the next token does not match the production,
-						// this production is not appropriate.
-						prodSuccess = false;
-						break;
-					} else {
-						tree->addChild(new ParseTree(pe->m_term, token));
-					}
-				} else {
-					// If the element is not a terminal, create a new tree for
-					// this nonterminal and recurse. Also keep track of how
-					// many tokens this recursion consumes in case we need to
-					// roll back the iterator later.
-					ParseTree*	child = new ParseTree(pe->m_nonTerm);
-					UINT		recurseParsed = 0;
-
-					if (parse(iter, child, recurseParsed)) {
-						// If the recursive parse succeeded, add the number of
-						// newly parsed tokens to the tokens consumed count and
-						// attach the child tree to the current tree.
-						tree->addChild(child);
-						tokensConsumed += recurseParsed;
-					} else {
-						// If the recursive parse failed, this production is
-						// not appropriate.
-						delete child;
-						prodSuccess = false;
-						break;
-					}
-				}
-			}
-
-			if (prodSuccess) {
-				// If the current production worked the whole way through, set
-				// this production as this tree's production, add the number of
-				// tokens consumed by the production to the number of tokens
-				// parsed and return.
-				tree->setProduction(prod);
-				tokensParsed += tokensConsumed;
-				return true;
-			} else {
-				// If the current production did not succeed, roll back the
-				// iterator based on the number of tokens consumed and remove
-				// any child trees from the current tree.
-				for (UINT j = 0; j < tokensConsumed; j++)
-					iter.prev();
-				tree->cullChildren();
-			}
-		}
-	}
-
-	// If we are here, we have gone through all of this nonterminal's
-	// productions and gotten a parse out of it.
-	return false;
-}
-
-
-
-// ****************************************************************************
-// printTree()
-// ****************************************************************************
-void
-Parser::printTree()
-{
-	if (m_tree)
-		m_tree->print();
-	else
-		printf("No tree to print");
-}
-
-
-
-// ****************************************************************************
-// generate()
-// ****************************************************************************
-void
-Parser::generate()
-{
-	FILE*	source = fopen("source.out", "w");
-	fprintf(source, "\n\n");
-	ParseTree*	tree = generate(new ParseTree(m_entrySymbol), source);
-	tree->print("gen.out");
-	fclose(source);
-}
-
-ParseTree*
-Parser::generate(ParseTree*	tree,
-				 FILE*		file)
-{
-	// Choose a random production to use.
-	Production*	prod = tree->getNonTerm()->getProductions()[rand() % tree->getNonTerm()->getProductions().getNumEntries()];
-	tree->setProduction(prod);
-
-	// For each element in the production...
-	for (UINT j = 0; j < prod->getNumEntries(); j++) {
-		ProdEle*	pe = prod->get(j);
-
-		// If the element is a terminal...
-		if (pe->m_isTerm) {
-			if (pe->m_term->m_tType == Token::NONE) {
-				// If the element is an epsilon,  do nothing.
-				continue;
-			}
-
-			// Add the terminal to the tree.
-			const comString&	spelling = (pe->m_term->m_spelling != "") ? pe->m_term->m_spelling : Token::getExample(pe->m_term->m_tType);
-
-			tree->addChild(new ParseTree(pe->m_term, new Token(pe->m_term->m_tType, spelling, 0)));
-
-			fprintf(file, "%s ", (const char*) spelling);
-		} else {
-			// If the element is not a terminal, create a new tree for
-			// this nonterminal and recurse.
-			tree->addChild(generate(new ParseTree(pe->m_nonTerm), file));
-		}
-	}
-
-	return tree;
 }

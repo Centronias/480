@@ -105,7 +105,7 @@ Transition::Transition(char		chr,
 void
 State::dumpFSA()
 {
-	FILE*	file = fopen("FSAdump.out", "w");
+	FILE*	file = fopen("fsa.out", "w");
 
 	for (UINT i = 0; i < m_states.getNumEntries(); i++) {
 		State*	state = m_states[i];

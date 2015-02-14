@@ -41,9 +41,14 @@ debug: compiler
 
 fsa: compiler
 	./compiler -f
+	cat fsa.out
 
 grammar: compiler
 	./compiler -g
+
+builder: compiler
+	./compiler -g -b Grammar
+#	cat grammar.out
 
 tree: compiler
 	./compiler -t

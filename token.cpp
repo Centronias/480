@@ -61,14 +61,14 @@ Token::init()
 {
 	m_typeNames[Token::NONE]		= "NONE";
 	m_typeNames[Token::Operator]	= "operator";
-	m_typeNames[Token::PrimType]	= "Prim";
-	m_typeNames[Token::StmtWord]	= "Statment";
-	m_typeNames[Token::Paren]		= "Paren";
-	m_typeNames[Token::BoolConst]	= "Bool";
-	m_typeNames[Token::RealConst]	= "Real";
-	m_typeNames[Token::IntConst]	= "Int";
-	m_typeNames[Token::StrConst]	= "String";
-	m_typeNames[Token::Identifier]	= "Id";
+	m_typeNames[Token::PrimType]	= "type";
+	m_typeNames[Token::StmtWord]	= "statement";
+	m_typeNames[Token::Paren]		= "paren";
+	m_typeNames[Token::BoolConst]	= "bool";
+	m_typeNames[Token::RealConst]	= "real";
+	m_typeNames[Token::IntConst]	= "int";
+	m_typeNames[Token::StrConst]	= "string";
+	m_typeNames[Token::Identifier]	= "id";
 
 	m_examples[Token::NONE]			= "";
 	m_examples[Token::Operator]		= "+";

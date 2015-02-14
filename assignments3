@@ -1,8 +1,11 @@
 TESTING PARSER
 1
 	Shortest length terminal word is ATOM eg. 9
-	Next shortest length is 2, ATOM ATOM eg. 9 9
+	Next shortest length is 2, ATOM ATOM eg. 9 9 or ( )
 2
-	Because S -> S S, you can generate a chain of S derivations to produce terminal words of any given length.
+	Because S -> S S and S -> ATOM, you can generate a chain of S derivations to produce terminal words of any given length.
 3
 	The parsing algorithm can be rewriten to produce strings rather than consume them simply by producing tokens rather than consuming them. The generator can randomly choose productions to use for each nonterminal symbol, effectively a random walker through the confines of a parse tree for this grammar.
+
+PARSER DESIGN 1
+	The grammar I use in my implementation is modified such that it is as predictive as possible (ie LL(1)). I have constructed an algorithm which, starting from the S non-terminal symbol, recursively descends, matching the next token in the input against the first terminal in the current production. It starts with a given tree and then for each recursion, creates a new tree which is attached as a child to the previous one, constructing a parse tree in the process.

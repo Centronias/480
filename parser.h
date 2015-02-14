@@ -21,8 +21,10 @@
 // ****************************************************************************
 class Parser {
   public:
-	static void			init();
+	static void			init(const comString&	grammarFile);
 	static void			run();
+	static void			buildGrammar(const comString&	filename);
+	static void			builtinGrammar();
 	static bool			parse(TokListIter&	tIter,
 							  ParseTree*	tree,
 							  UINT&			tokensParsed);
@@ -33,6 +35,9 @@ class Parser {
   private:
   	static ParseTree*	generate(ParseTree*	tree,
   								 FILE*		file);
+  	static Terminal*	makeTerminal(const comString&	spelling);
+  	static bool			termMatch(Terminal*	term,
+  								  const comString&	spelling);
 
 	static NonTerm*		m_entrySymbol;
 	static ParseTree*	m_tree;

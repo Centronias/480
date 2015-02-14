@@ -25,7 +25,8 @@ class Global {
   							char**	argv);
 	static void			readCmdLine(int		argc,
 									char**	argv,
-									char*	inFile);
+									char*	inFile,
+									char*	grammarFile);
 
 	static void			fail();
 	static void			succeed();

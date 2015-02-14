@@ -1,0 +1,60 @@
+S
+	( )
+	( S )
+	S S
+	EXPR
+EXPR
+	OPER
+	STMTS
+OPER
+	( := id OPER )
+	( BINOPS OPER OPER )
+	( UNOPS OPER )
+	CONSTS
+	id
+BINOPS
+	+
+	-
+	*
+	/
+	%
+	^
+	=
+	>
+	>=
+	<
+	<=
+	!=
+	or
+	and
+UNOPS
+	-
+	not
+	sin
+	cos
+	tan
+CONSTS
+	string
+	int
+	float
+	bool
+STMTS
+	IFSTMTS
+	WHILESTMTS
+	LETSTMTS
+	PRINTSTMTS
+PRINTSTMTS
+	( stdout OPER )
+IFSTMTS
+	( if EXPR EXPR EXPR )
+	( if EXPR EXPR )
+WHILESTMTS
+	( while EXPR EXPRLIST )
+EXPRLIST
+	EXPR
+	EXPR EXPRLIST
+LETSTMTS
+	( let ( VARLIST ) )
+VARLIST
+	( id type )
+	( ( id type ) VARLIST )
