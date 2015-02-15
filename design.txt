@@ -1,0 +1,16 @@
+Parser Design
+	The basic design of the parser is that it has a representation of the grammar and can iterate over the tokens as needed to "traverse" the grammar and build a parse tree in the process. The grammar is stored as a set of nonterminal symbols and terminal symbols related to each other by the inclusion of productions (stored as ordered lists of elements which are either nonterminals or terminals). The parser itself only explicitly knows about the first symbol, S, and all others are reached by recursing through the grammar. This recursion works by keeping track of the next token to be parsed and knowing what the nonterminal symbol and production of that nonterminal should be matched. Thanks to the refactoring of the given grammar into an LL(1) grammar which describes the same language, the parse need only decide which production to use for a given nonterminal by checking its first production element, which in an LL(1) grammar is by definition a terminal symbol. From there, it is simply a matter of matching against other symbols in the production by ensuring that terminal symbols have corresponding tokens and by recursing into nonterminal symbols.
+Abstract Syntax Tree datastructure
+	In the end, the rerpesentation of the AST works like a basic n-ary tree design. It is a node object which has an array of pointers to other nodes while also holding onto some data. In our implementation, the extra data is a reference to to the token, as well as a reference to either the nonterminal or terminal symbol which that token matched, and finally a reference to the production (and indirectly the parent nonterminal symbol) which contains this node. Because of this design, it is very easy to print and manipulate the tree and, in the future, it should be fairly easy to create something that actually deals with the semantics.
+
+	TESTING PARSER
+1
+	Shortest length terminal word is ATOM eg. 9
+	Next shortest length is 2, ATOM ATOM eg. 9 9 or ( )
+2
+	Because S -> S S and S -> ATOM, you can generate a chain of S derivations to produce terminal words of any given length.
+3
+	The parsing algorithm can be rewriten to produce strings rather than consume them simply by producing tokens rather than consuming them. The generator can randomly choose productions to use for each nonterminal symbol, effectively a random walker through the confines of a parse tree for this grammar.
+
+PARSER DESIGN 1
+	The grammar I use in my implementation is modified such that it is as predictive as possible (ie LL(1)). I have constructed an algorithm which, starting from the S non-terminal symbol, recursively descends, matching the next token in the input against the first terminal in the current production. It starts with a given tree and then for each recursion, creates a new tree which is attached as a child to the previous one, constructing a parse tree in the process.
