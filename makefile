@@ -28,11 +28,22 @@ clean:
 
 stutest.out: compiler
 	cat stutest1.in
-	-./compiler $(RUNFLAGS) stutest1.in > stutest1.out 2>&1
+	-rm -f tree.out
+	-./compiler $(RUNFLAGS) -b mod.grammar stutest1.in > stutest1.out 2>&1
 	cat stutest1.out
-#	cat stutest2.in
-#	-./compiler stutest2.in > stutest2.out
-#	cat stutest2.out
+	-cat tree.out >> stutest1.out
+
+#	cat bad.ibtl
+	-rm -f tree.out
+	-./compiler -b mod.grammar bad.ibtl > stutest2.out
+	cat stutest2.out
+	-cat tree.out >> stutest2.out
+
+#	cat test.ibtl
+	-rm -f tree.out
+	-./compiler -b mod.grammar test.ibtl > stutest3.out
+	cat stutest3.out
+	-cat tree.out >> stutest3.out
 
 debug: compiler
 	cat stutest2.in
