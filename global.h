@@ -31,6 +31,8 @@ class Global {
 	static void			fail();
 	static void			succeed();
 
+	static bool			isNumeric(const char*	buf);
+
 	static bool			isDebug()	{return m_debug;}
 	static bool			isDumpFSA()	{return m_dumpFSA;}
 	static bool			isDumpGrammar()	{return m_dumpGrammar;}

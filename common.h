@@ -49,8 +49,12 @@ class Parser;
 class ParseTree;
 class Production;
 class Terminal;
+class Translator;
+class TransScheme;
 struct Transition;
 struct ProdEle;
+struct PrUnit;
+struct PoUnit;
 
 
 
@@ -65,6 +69,9 @@ typedef comVector<State*>		StateVec;
 typedef comVector<NonTerm*>		NTermVec;
 typedef comDList<Token*>		TokList;
 typedef comDListIter<Token*>	TokListIter;
+typedef comVector<PrUnit*>		PrVec;
+typedef comVector<PoUnit*>		PoVec;
+typedef	comVector<TransScheme*>	TSVec;
 
 
 
@@ -82,8 +89,10 @@ typedef comDListIter<Token*>	TokListIter;
 // Class Includes
 // ****************************************************************************
 #include "token.h"
+#include "translator.h"
 #include "symbolTable.h"
 #include "state.h"
 #include "grammar.h"
 #include "lexer.h"
 #include "parser.h"
+#include "tu.h"

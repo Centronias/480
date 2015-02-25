@@ -12,8 +12,8 @@
 
 CCC = g++
 CCFLAGS = -fmax-errors=10 -Wall -std=gnu++11
-OBJS = comString.o token.o symbolTable.o state.o lexer.o grammar.o parser.o global.o
-SOURCE = lexer.cpp state.cpp comString.cpp symboltable.cpp token.cpp grammar.cpp parser.cpp global.cpp
+OBJS = comString.o token.o symbolTable.o state.o lexer.o grammar.o parser.o global.o tu.o translator.o
+SOURCE = lexer.cpp state.cpp comString.cpp symboltable.cpp token.cpp grammar.cpp parser.cpp global.cpp tu.cpp translator.cpp
 RUNFLAGS =
 
 $(OBJS): $(SOURCE)
@@ -58,7 +58,7 @@ grammar: compiler
 	./compiler -g
 
 builder: compiler
-	./compiler -g -b Grammar
+	./compiler -g -b mod.grammar
 #	cat grammar.out
 
 tree: compiler
@@ -73,6 +73,9 @@ gperfect: compiler given.grammar
 
 tperfect: compiler test.ibtl
 	./compiler -b mod.grammar test.ibtl
+
+dtest: compiler stutest2.in
+	./compiler -b mod.grammar stutest2.in
 
 proftest.out: compiler
 	cat $(PROFTEST)

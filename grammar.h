@@ -40,10 +40,19 @@ struct ProdEle {
 // ****************************************************************************
 class Production : public ProdEleVec {
   public:
+						~Production();
+
 	void				add(Terminal*	t)	{append(new ProdEle(t));}
 	void				add(NonTerm*	n)	{append(new ProdEle(n));}
+	void				addTScheme(TransScheme*	tScheme)	{m_tSchemes.append(tScheme);}
 
 	comString&			printable(comString&	buf);
+	bool				matches(Production*	o);
+
+	TSVec&				getTransSchemes()	{return m_tSchemes;}
+
+  private:
+	TSVec				m_tSchemes;
 };
 
 
@@ -99,10 +108,14 @@ class ParseTree {
 								  Token*	token);
 						~ParseTree();
 
+	void				typeCheck();
+
 	void				addChild(ParseTree*	child);
 	void				cullChildren();
+	ParseTree*			getChild(UINT	i)	{return m_children[i];}
 
 	void				setProduction(Production*	production)	{m_production = production;}
+	Production*			getProduction()	{return m_production;}
 
 	bool				isTerminal()	{return m_prodEle.m_isTerm;}
 	Terminal*			getTerminal()	{return m_prodEle.m_term;}
@@ -110,17 +123,21 @@ class ParseTree {
 	void				print()	{print("tree.out");}
 	void				print(const comString&	filename);
 	const comString&	getDesc()	{return m_prodEle.toString();}
-
+	TransScheme*		getScheme()	{return m_scheme;}
+	Token*				getToken()	{return m_token;}
 
   private:
 	void				print(UINT	level,
 							  FILE*	file);
+	void				typeCheck(UINT&	lastLine);
 
 	ParseTree*			m_children[PT_MAX_CHILDREN];
 	ProdEle				m_prodEle;
 	UINT				m_numChildren;
 	Production*			m_production;
 	Token*				m_token;
+	Translator::Type	m_type;
+	TransScheme*		m_scheme;
 };
 
 

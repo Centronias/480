@@ -1,60 +1,114 @@
 S
 	( S_PAR ) S_REC
+		: 1 3
 	string S_REC
+		: 0 1
 	int S_REC
-	float S_REC
+		: 0 1
+	real S_REC
+		: 0 1
 	bool S_REC
+		: 0 1
 	id S_REC
+		: 0 1
 S_PAR
 	( S_PAR ) S_REC
 	string S_REC
 	int S_REC
-	float S_REC
+	real S_REC
 	bool S_REC
 	id S_REC
 	:= id RESR
+		:= i i -> ~		: 2 1 !
+		:= b b -> ~		: 2 1 !
+		:= r r -> ~		: 2 1 f!
 	+ RESR RESR
-	- RESR RESR_MIN
+		+ i i -> i		: 2 1 +
+		+ r r -> r		: 2 1 f+
+		+ s s -> s		: 2 1 pad place pad +place pad count
+	- RESR RESR
+		- i i -> i		: 2 1 -
+		- r r -> r		: 2 1 f-
 	* RESR RESR
+		* i i -> i		: 2 1 *
+		* r r -> r		: 2 1 f*
 	/ RESR RESR
+		/ i i -> i		: 2 1 /
+		/ r r -> r		: 2 1 f/
 	% RESR RESR
+		% i i -> i		: 2 1 /mod drop
 	^ RESR RESR
+		^ i i -> i		: 2 1 **
+		^ r r -> r		: 2 1 f**
 	= RESR RESR
+		= i i -> b		: 2 1 =
+		= r r -> b		: 2 1 f=
+		= b b -> b		: 2 1 0=
 	> RESR RESR
+		> i i -> b		: 2 1 >
+		> r r -> b		: 2 1 f>
 	>= RESR RESR
+		>= i i -> b		: 2 1 >=
+		>= r r -> b		: 2 1 f>=
 	< RESR RESR
+		< i i -> b		: 2 1 <
+		< r r -> b		: 2 1 f<
 	<= RESR RESR
+		<= i i -> b		: 2 1 <=
+		<= r r -> b		: 2 1 f<=
 	!= RESR RESR
+		<> i i -> b		: 2 1 <>
+		<> r r -> b		: 2 1 f<>
 	or RESR RESR
+		or b b -> b		: 2 1 or
 	and RESR RESR
+		or b b -> b		: 2 1 and
 	not RESR
+		not b -> b		: 1 invert
 	sin RESR
+		sin i -> r		: 1 s>f fsin
 	cos RESR
+		cos i -> r		: 1 s>f fcos
 	tan RESR
-	if EXPR EXPR ELSE
-	while EXPR EXPR EXPRLIST
+		tan i -> r		: 1 s>f ftan
+	if RESR EXPR ELSE
+		if b @ @ -> ~	: 1 if 2 else 3 then
+	while RESR EXPR EXPRLIST
+		while b @ @ -> ~	: begin 1 invert if leave else 2 3 then again 
 	let ( ( id type ) VARLIST )
+		:
 	stdout RESR
+		stdout i -> ~	: 1 .
+		stdout r -> ~	: 1 f.
+		stdout b -> ~	: 1 .
+		stdout s -> ~	: 1 type
 	~
+		:
 S_REC
 	( S_PAR ) S_REC
 	string S_REC
 	int S_REC
-	float S_REC
+	real S_REC
 	bool S_REC
 	id S_REC
 	~
 EXPR
 	( EXPR_PAR )
+		: 1
 	string
+		s : 0
 	int
-	float
+		i : 0
+	real
+		r : 0
 	bool
+		b : 0
 	id
+		: 0
 EXPR_PAR
 	:= id RESR
 	+ RESR RESR
-	- RESR RESR_MIN
+	- RESR RESR
 	* RESR RESR
 	/ RESR RESR
 	% RESR RESR
@@ -71,21 +125,30 @@ EXPR_PAR
 	sin RESR
 	cos RESR
 	tan RESR
-	if EXPR EXPR ELSE
-	while EXPR EXPR EXPRLIST
+	if RESR EXPR ELSE
+	while RESR EXPR EXPRLIST
 	let ( ( id type ) VARLIST )
 	stdout RESR
 RESR
 	( OPER )
+		( s ) -> s	: 1
+		( i ) -> i	: 1
+		( b ) -> b	: 1
+		( r ) -> r	: 1
 	string
+		: 0
 	int
-	float
+		: 0
+	real
+		: 0
 	bool
+		: 0
 	id
+		: 0
 OPER
 	:= id RESR
 	+ RESR RESR
-	- RESR RESR_MIN
+	- RESR RESR
 	* RESR RESR
 	/ RESR RESR
 	% RESR RESR
@@ -106,26 +169,33 @@ RESR_MIN
 	( OPER )
 	string
 	int
-	float
+	real
 	bool
 	id
 	~
 EXPRLIST
 	( EXPR_PAR ) EXPRLIST
+		: 1 3
 	string EXPRLIST
+		: 1
 	int EXPRLIST
-	float EXPRLIST
+		: 1
+	real EXPRLIST
+		: 1
 	bool EXPRLIST
+		: 1
 	id EXPRLIST
+		: 1
 	~
 VARLIST
 	( id type ) VARLIST
+		:
 	~
 ELSE
 	( EXPR_PAR )
 	string
 	int
-	float
+	real
 	bool
 	id
 	~

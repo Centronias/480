@@ -1,6 +1,6 @@
 // ****************************************************************************
 // ****************************************************************************
-// Parser.h
+// translator.h
 // ****************************************************************************
 // 
 // ****************************************************************************
@@ -11,38 +11,36 @@
 // ****************************************************************************
 // Defines
 // ****************************************************************************
-#ifndef	H_PARSER
-#define H_PARSER
+#ifndef	H_TRANSLATOR
+#define H_TRANSLATOR
 
 
 
 // ****************************************************************************
-// Parser Class
+// Translator Class
 // ****************************************************************************
-class Parser {
+class Translator {
   public:
-	static void			init(const comString&	grammarFile);
-	static void			run();
-	static void			buildGrammar(const comString&	filename);
-	static void			builtinGrammar();
-	static bool			parse(TokListIter&	tIter,
-							  ParseTree*	tree,
-							  UINT&			tokensParsed);
-	static void			generate();
+	enum Type {
+		Any,
+		Int,
+		Float,
+		Str,
+		Bool,
+		None,
+		END
+	};
 
-	static void			printTree();
+	static void				init();
+	static void				run();
+
+	static Type				getType(const comString&	spelling);
+	static const comString&	typeToString(Type	type)	{return m_typeNames[(UINT) type];}
 
   private:
-  	static ParseTree*	generate(ParseTree*	tree,
-  								 FILE*		file);
-  	static Terminal*	makeTerminal(const comString&	spelling);
-  	static bool			termMatch(Terminal*	term,
-  								  const comString&	spelling);
-
-	static NonTerm*		m_entrySymbol;
-	static ParseTree*	m_tree;
-
-friend class Translator;
+	static void				run(ParseTree*	tree,
+								FILE*		output);
+	static comString		m_typeNames[Type::END];
 };
 
 

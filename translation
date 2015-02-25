@@ -1,0 +1,48 @@
++ i i	-> i	: #2 #1 +
+- i i	-> i	: #2 #1 -
+* i i	-> i	: #2 #1 *
+/ i i	-> i	: #2 #1 /
+% i i	-> i	: #2 #1 /mod
+^ i i	-> i	: #2 #1 **
+- i		-> i	: #1 neg
+
++ f f	-> f	: #2 #1 f+
+- f f	-> f	: #2 #1 f-
+* f f	-> f	: #2 #1 f*
+/ f f	-> f	: #2 #1 f/
+% f f	-> f	: #2 #1 f/mod
+^ f f	-> f	: #2 #1 f**
+- f		-> f	: #1 fneg
+
+= i i	-> b	: #2 #1 =
+> i i	-> b	: #2 #1 >
+< i i	-> b	: #2 #1 <
+>= i i	-> b	: #2 #1 >=
+<= i i	-> b	: #2 #1 <=
+!= i i	-> b	: #2 #1 <>
+
+= f f	-> b	: #2 #1 =
+> f f	-> b	: #2 #1 >
+< f f	-> b	: #2 #1 <
+=> f f	-> b	: #2 #1 >=
+=< f f	-> b	: #2 #1 <=
+!= f f	-> b	: #2 #1 <>
+
+or b b	-> b	: #2 #1 or
+and b b	-> b	: #2 #1 and
+not b	-> b	: #2 #1 =0
+
+sin i	-> f	: #1 sin
+cos i	-> f	: #1 cos
+tan i	-> f	: #1 tan
+
+sin f	-> f	: #1 fsin
+cos f	-> f	: #1 fcos
+tan f	-> f	: #1 ftan
+
+stdout i	->	: #1 .
+stdout f	->	: #1 f.
+stdout s	->	: #1 type
+stdout b	->	: #1 .
+
+:= vi i		->	: #

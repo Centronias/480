@@ -71,11 +71,13 @@ Global::run(int		argc,
 	printf("\n////////////////////////////////////////////////////////////\n\n");
 
 	Lexer::init();
+	Translator::init();
 	Parser::init(grammar);
 
 	Lexer::run(input);
 	Parser::run();
 	Parser::printTree();
+	Translator::run();
 }
 
 
@@ -164,4 +166,20 @@ Global::succeed()
 	printf("\tExiting compiler\n");
 	printf("////////////////////////////////////////////////////////////\n");
 	exit(EXIT_SUCCESS);
+}
+
+
+
+// ************************************************************************************************
+// isNumeric()
+// ************************************************************************************************
+bool
+Global::isNumeric(const char*	buf)
+{
+	while (*buf) {
+		if (!isdigit(*(buf++)))
+			return false;
+	}
+
+	return true;
 }

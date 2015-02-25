@@ -74,6 +74,11 @@ Parser::run()
 		fprintf(stderr, "Failed to parse tokens\n");
 		Global::fail();
 	}
+
+
+	printf("Running type check.\n");
+	m_tree->typeCheck();
+	printf("Passed type check.\n");
 }
 
 
@@ -162,7 +167,7 @@ Parser::parse(TokListIter&	iter,
 	}
 
 	token = iter.next();
-	printf("Unexpected token \"%s\" on line %d\n", (const char*) token->getSpelling(), token->getLine());
+	printf("Unexpected token (%s:\"%s\") on line %d\n", (const char*) Token::getTypeName(token->getType()), (const char*) token->getSpelling(), token->getLine());
 	iter.prev();
 
 
@@ -193,7 +198,7 @@ Parser::printTree()
 void
 Parser::generate()
 {
-	FILE*	source = fopen("source.out", "w");
+	FILE*	source = fopen("generated.ibtl", "w");
 	ParseTree*	tree = generate(new ParseTree(m_entrySymbol), source);
 	tree->print("gen.out");
 	fclose(source);
@@ -252,6 +257,8 @@ Parser::buildGrammar(const comString&	filename)
 
 	comVector<NonTerm*>		nTerms;
 	comVector<Terminal*>	terms;
+	comVector<Production*>	prods;
+	bool					unique;
 
 	// Loop through each line of the file, looking for nonterminal
 	// declarations.
@@ -270,6 +277,7 @@ Parser::buildGrammar(const comString&	filename)
 
 	rewind(input);
 	NonTerm*	current = NULL;
+	Production*	pCurr	= NULL;
 
 	// Loop through each line in the file, looking for productions.
 	while(fgets(line, 128, input)) {
@@ -282,61 +290,159 @@ Parser::buildGrammar(const comString&	filename)
 		if (*line == '\t') {
 			// If the first character on the line is a tab, it is a production
 			// for the current nonterminal.
-			if (!current) {
-				fprintf(stderr, "Tried to parse a production without a nonterminal.");
-				Global::fail();
-			}
 
-			Production*	prod = new Production;
-			current->addProduction(prod);
-			char	buf[16];
-			char*	bLoc	= buf;
-
-
-			// Read out production elements seperated by single spaces and add
-			// them to the current production.
-			for (char* loc = line + 1; *(loc - 1) != '\0'; loc++) {
-				if (*loc == ' ' || *loc == '\0') {
-					// We've reached the end of the current production
-					// element's spelling. Look for it in the list of nonterms
-					// and then the list of terminals.
-					*bLoc = '\0';
-					bool found = false;
-
-					for (UINT i = 0; i < nTerms.getNumEntries(); i++) {
-						if (nTerms[i]->getName() == buf) {
-							prod->add(nTerms[i]);
-							bLoc = buf;
-							found = true;
-							break;
-						}
-					}
-
-					if (found)
-						continue;
-
-					for (UINT i = 0; i < terms.getNumEntries(); i++) {
-						if (termMatch(terms[i], buf)) {
-							prod->add(terms[i]);
-							bLoc = buf;
-							found = true;
-							break;
-						}
-					}
-
-					if (found)
-						continue;
-
-					// If we're here, this production element does not yet exist.
-					//Add it as a terminal.
-					Terminal*	term = makeTerminal(buf);
-					terms.append(term);
-					prod->add(term);
-					bLoc = buf;
-				} else {
-					// Copy the current character on the line into the buffer.
-					*(bLoc++) = *loc;
+			// If the second character is also a tab, this is a translation
+			// scheme for the current production.
+			if (*(line + 1) == '\t') {
+				if (!pCurr) {
+					fprintf(stderr, "Tried to parse a translation without a production. \"%s\"", line);
+					Global::fail();
 				}
+
+				// If the last parsed production was not unique, do not pay
+				// attention to its translation schemes.
+				if (!unique)
+					continue;
+
+				TransScheme*	tScheme = new TransScheme;
+				pCurr->addTScheme(tScheme);
+				char			buf[16];
+				char*			bLoc	= buf;
+				bool			pre		= true;
+				UINT			prIndex	= 0;
+
+				// Read out translation scheme elements seperated by single
+				// spaces.
+				for (char* loc = line + 2; *(loc - 1) != '\0'; loc++) {
+					// If we've reached the end of the current tScheme element,
+					// add it to the proper scheme half and then continue.
+					if (*loc == '\t' || *loc == ' ' || *loc == '\0') {
+						*bLoc = '\0';
+
+						// If the buffer is empty, just continue;
+						if (bLoc == buf)
+							continue;
+
+						// If the spelling was '->', just ignore it.
+						if (strcmp(buf, "->") == 0) {
+							bLoc = buf;
+							continue;
+						}
+
+						// If the spelling was ':', unset the pre flag.
+						if (strcmp(buf, ":") == 0) {
+							pre = false;
+							bLoc = buf;
+							continue;
+						}
+
+						// Do the actual adding now that we've pulled out
+						// indicator stuff.
+						if (pre) {
+							// Get the type and add a pretranslation unit if it
+							// is valid.
+							Translator::Type	type = Translator::getType(buf);
+							if (type != (Translator::Type) -1) {
+								tScheme->addPre(type, prIndex);
+								bLoc = buf;
+							}
+
+							prIndex++;
+						} else {
+							if (Global::isNumeric(buf)) {
+								tScheme->addPost((UINT) atoi(buf));
+								bLoc = buf;
+							} else {
+								tScheme->addPost(buf);
+								bLoc = buf;
+							}
+						}
+
+						bLoc = buf;
+					} else {
+						// Copy the current character on the line into the buffer.
+						*(bLoc++) = *loc;
+					}
+				}
+			} else {
+				if (!current) {
+					fprintf(stderr, "Tried to parse a production without a nonterminal. \"%s\"", line);
+					Global::fail();
+				}
+
+				Production*	prod	= new Production;
+				char		buf[16];
+				char*		bLoc	= buf;
+
+				// Read out production elements seperated by single spaces and add
+				// them to the current production.
+				for (char* loc = line + 1; *(loc - 1) != '\0'; loc++) {
+					if (*loc == ' ' || *loc == '\0') {
+						// We've reached the end of the current production
+						// element's spelling. Look for it in the list of nonterms
+						// and then the list of terminals.
+						*bLoc = '\0';
+						bool found = false;
+
+						// If the read in word is '->', we need to swap to the next
+						// loop to read in the translation scheme.
+						if (strcmp(buf, "->") == 0)
+							break;
+
+						for (UINT i = 0; i < nTerms.getNumEntries(); i++) {
+							if (nTerms[i]->getName() == buf) {
+								prod->add(nTerms[i]);
+								bLoc = buf;
+								found = true;
+								break;
+							}
+						}
+
+						if (found)
+							continue;
+
+						for (UINT i = 0; i < terms.getNumEntries(); i++) {
+							if (termMatch(terms[i], buf)) {
+								prod->add(terms[i]);
+								bLoc = buf;
+								found = true;
+								break;
+							}
+						}
+
+						if (found)
+							continue;
+
+						// If we're here, this production element does not yet exist.
+						// Add it as a terminal.
+						Terminal*	term = makeTerminal(buf);
+						terms.append(term);
+						prod->add(term);
+						bLoc = buf;
+					} else {
+						// Copy the current character on the line into the buffer.
+						*(bLoc++) = *loc;
+					}
+				}
+
+				// Look for duplicate productions. If one exists, replace this
+				// one with it.
+				unique = true;
+
+				for (UINT i = 0; i < prods.getNumEntries(); i++) {
+					if (prods[i]->matches(prod)) {
+						delete prod;
+						prod = prods[i];
+						unique = false;
+						break;
+					}
+				}
+
+				if (unique)
+					prods.append(prod);
+
+				current->addProduction(prod);
+				pCurr	= prod;
 			}
 		} else {
 			// The current line is a nonterm. Find it in the list of prepared
@@ -356,6 +462,15 @@ Parser::buildGrammar(const comString&	filename)
 		if (nTerms[i]->getProductions().getNumEntries() == 0) {
 			fprintf(stderr, "Nonterminal symbol \"%s\" has no productions.\n", (const char*) nTerms[i]->getName());
 			Global::fail();
+		}
+	}
+
+	// Check that all of the productions have translation schemes.
+	for (UINT i = 0; i < prods.getNumEntries(); i++) {
+		if (prods[i]->getTransSchemes().getNumEntries() == 0) {
+			comString	printable;
+			fprintf(stderr, "Production \"%s\" has no translation schemes.\n", (const char*) prods[i]->printable(printable));
+			Global::fail();	
 		}
 	}
 
@@ -409,6 +524,30 @@ bool
 Parser::termMatch(Terminal*			term,
 				  const comString&	spelling)
 {
+	// If the terminal's spelling in blank, it is a constant with variable
+	// spelling and must be checked against the token type.
+	if (term->m_spelling == "") {
+		switch (term->m_tType) {
+		  case Token::StrConst:
+			return spelling == "string";
+		  case Token::IntConst:
+			return spelling == "int";
+		  case Token::RealConst:
+			return spelling == "real";
+		  case Token::BoolConst:
+			return spelling == "bool";
+		  case Token::Identifier:
+			return spelling == "id";
+		  case Token::PrimType:
+			return spelling == "type";
+		  case Token::NONE:
+			return spelling == "~" || spelling == "NONE";
+		  default:
+			fprintf(stderr, "Trying to match against non-literal constant type token with variable spelling: (%d)\n", term->m_tType);
+			Global::fail();
+		}
+	}
+
 	return term->m_spelling == spelling;
 }
 
