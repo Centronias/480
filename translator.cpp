@@ -80,12 +80,12 @@ void
 Translator::run(ParseTree*	tree,
 				FILE*		output)
 {
-
 	// If this node does not have a scheme...
 	if (!tree->getScheme()) {
 		// ... and it's a terminal, just print it.
 		if (tree->isTerminal()) {
-			fprintf(output, "%s ", (const char*) tree->getToken()->getSpelling());
+			comString	buf;
+			fprintf(output, "%s ", (const char*) translateSpelling(tree->getToken(), buf));
 			return;
 		}
 
@@ -112,4 +112,36 @@ Translator::run(ParseTree*	tree,
 			run(tree->getChild(p->m_index), output);
 		}
 	}
+}
+
+
+
+// ****************************************************************************
+// Translator::translateSpelling()
+// ****************************************************************************
+comString&
+Translator::translateSpelling(Token*		token,
+							  comString&	buf)
+{
+	switch (token->getType()) {
+	  case Token::BoolConst:
+		if (token->getSpelling() == "true")
+			return buf = "-1";
+		else
+			return buf = "0";
+		break;
+	  case Token::StrConst:
+		{
+			char	cBuf[64];
+			sprintf(cBuf, "s\" %s", ((const char*) token->getSpelling()) + 1);
+
+			return buf = cBuf;
+		}
+		break;
+
+	  default:
+		break;
+	}
+
+	return buf = token->getSpelling();
 }

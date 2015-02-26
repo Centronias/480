@@ -1,1 +1,1 @@
-(stdout (+ "kitties " " and cookies"))
+(stdout (^ 2 2))

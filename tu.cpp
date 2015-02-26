@@ -82,3 +82,33 @@ TransScheme::printable(comString&	buf)
 	buf = printBuffer;
 	return buf;
 }
+
+
+
+// ****************************************************************************
+// TransScheme::returns()
+// ****************************************************************************
+Translator::Type
+TransScheme::returns()
+{
+	if (m_preVec.getNumEntries())
+		return m_preVec[m_preVec.getNumEntries() - 1]->m_type;
+
+	return Translator::None;
+}
+
+
+
+// ****************************************************************************
+// TransScheme::getPreType()
+// ****************************************************************************
+Translator::Type
+TransScheme::getPreType(UINT	i)
+{
+	for (UINT j = 0; j < m_preVec.getNumEntries(); j++) {
+		if (m_preVec[j]->m_index == i)
+			return m_preVec[j]->m_type;
+	}
+
+	return Translator::None;
+}

@@ -59,6 +59,9 @@ class TransScheme {
 	PrVec&					getPreVec()	{return m_preVec;}
 	PoVec&					getPostVec()	{return m_postVec;}
 
+	Translator::Type		getPreType(UINT	i);
+	Translator::Type		returns();
+
 	comString&				printable(comString&	buf);
 
   private:

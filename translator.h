@@ -40,6 +40,8 @@ class Translator {
   private:
 	static void				run(ParseTree*	tree,
 								FILE*		output);
+	static comString&		translateSpelling(Token*		token,
+											  comString&	buf);
 	static comString		m_typeNames[Type::END];
 };
 

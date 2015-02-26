@@ -33,8 +33,9 @@ class Parser {
 	static void			printTree();
 
   private:
-  	static ParseTree*	generate(ParseTree*	tree,
-  								 FILE*		file);
+  	static ParseTree*	generate(ParseTree*			tree,
+  								 FILE*				file,
+  								 Translator::Type	tType);
   	static Terminal*	makeTerminal(const comString&	spelling);
   	static bool			termMatch(Terminal*	term,
   								  const comString&	spelling);

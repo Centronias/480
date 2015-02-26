@@ -270,7 +270,7 @@ ParseTree::print(UINT	level,
 	fprintf(file, "%s (%s):", (const char*) m_prodEle.toString(), (const char*) Translator::typeToString(m_type));
 
 	if (m_production)
-		fprintf(file, " %s (%p)\n", (const char*) m_production->printable(printable), m_scheme);
+		fprintf(file, " %s\n", (const char*) m_production->printable(printable));
 	else if (m_token)
 		fprintf(file, " %s\n", (const char*) m_token->printable(printable));
 	else

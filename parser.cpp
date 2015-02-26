@@ -199,18 +199,60 @@ void
 Parser::generate()
 {
 	FILE*	source = fopen("generated.ibtl", "w");
-	ParseTree*	tree = generate(new ParseTree(m_entrySymbol), source);
+	ParseTree*	tree = generate(new ParseTree(m_entrySymbol), source, Translator::None);
 	tree->print("gen.out");
 	fclose(source);
 }
 
 ParseTree*
-Parser::generate(ParseTree*	tree,
-				 FILE*		file)
+Parser::generate(ParseTree*			tree,
+				 FILE*				file,
+				 Translator::Type	tType)
 {
-	// Choose a random production to use.
-	Production*	prod = tree->getNonTerm()->getProductions()[rand() % tree->getNonTerm()->getProductions().getNumEntries()];
-	tree->setProduction(prod);
+	// Choose a random production to use which includes a translation scheme
+	// which has the proper return type. We assume that we will eventually get
+	// a useful production.
+	Production*		prod	= NULL;
+	TransScheme*	tScheme	= NULL;
+
+	while (true) {
+		prod = tree->getNonTerm()->getProductions()[rand() % tree->getNonTerm()->getProductions().getNumEntries()];
+		tree->setProduction(prod);
+
+		// Make sure this production doesn't use variables.
+		bool	variables = false;
+		for (UINT i = 0; i < prod->getNumEntries(); i++) {
+			if (prod->get(i)->m_isTerm && prod->get(i)->m_term->m_tType == Token::Identifier) {
+				variables = true;
+				break;
+			}
+		}
+
+		if (variables)
+			continue;
+
+		// Choose a random translation scheme to use whose return type is the same
+		// as the type we are supposed to use. Make sure before trying to select
+		// one that one exists.
+		if (tType != Translator::None && tType != Translator::Any) {
+			bool	valid = false;
+			for (UINT i = 0; i < prod->getTransSchemes().getNumEntries(); i++) {
+				if (prod->getTransSchemes()[i]->returns() == tType) {
+					valid = true;
+					break;
+				}
+			}
+
+			if (!valid)
+				continue;
+		}
+
+		do {
+			tScheme = prod->getTransSchemes()[rand() % prod->getTransSchemes().getNumEntries()];
+		} while (tType != Translator::None && tType != Translator::Any && tScheme->returns() != tType);
+
+		break;
+	}
 
 	// For each element in the production...
 	for (UINT j = 0; j < prod->getNumEntries(); j++) {
@@ -232,7 +274,7 @@ Parser::generate(ParseTree*	tree,
 		} else {
 			// If the element is not a terminal, create a new tree for
 			// this nonterminal and recurse.
-			tree->addChild(generate(new ParseTree(pe->m_nonTerm), file));
+			tree->addChild(generate(new ParseTree(pe->m_nonTerm), file, tScheme->getPreType(j)));
 		}
 	}
 
@@ -465,7 +507,8 @@ Parser::buildGrammar(const comString&	filename)
 		}
 	}
 
-	// Check that all of the productions have translation schemes.
+	// Check that all of the productions have translation schemes if we are
+	// actually going to translate.
 	for (UINT i = 0; i < prods.getNumEntries(); i++) {
 		if (prods[i]->getTransSchemes().getNumEntries() == 0) {
 			comString	printable;
