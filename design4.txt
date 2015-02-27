@@ -1,1 +1,0 @@
-The parse tree translator will work recursively, traversing from the top of the tree, printing production elements in gforth syntax and recursing into nonterminals. Each production will have a generic type associated with it which indicates how to translate it into gforth. Definite terminals will be translated one-to-one via a lookup system as well.
