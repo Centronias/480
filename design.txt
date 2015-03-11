@@ -1,54 +1,10 @@
-Charles Santos
-CS480 W14
-931-928-349
+Milestone 5
+Scope and Variables
 
-The parse tree translator will work recursively, traversing from the top of the tree, printing production elements in gforth syntax and recursing into nonterminals. Each production will have a translation scheme associated with it which will describe how to translate from ibtl to gforth. Literals will be translated one-to-one using minor conversions for bools and strings.
+The basic idea of the implementation I will be using is defining nodes in the parse tree to be "scope edges". Scope edge nodes will contain the definitions of the variables local to that scope and those definitions will simply be the following:
 
-As described above, each production will know before translation what its translation scheme is. This is determined through a series of steps. The first, and perhaps most important step, is that a set of translation schemes are assigned to each generic production at the same time the grammar is specified. For example, the production for the + operator is shown below.
+	Pretranslation identifier spelling (ie variable name)
+	Posttranslation identifier spelling (ie globally unique variable name for use in gforth)
+	Type
 
-	+ RESR RESR
-		+ i i -> i		: 2 1 +
-		+ r r -> r		: 2 1 f+
-		+ s s -> s		: 2 1 s+
-
-The first line is the grammar production specifying (roughly) that a '+' followed by two operants which result in values is syntactically correct. The next three lines are the translation schemes. The first half (before the colon) is the "pre-translation scheme" which defines the types accepted by this operator. For example, we know how to add two ints, two reals, or two strings, but no mix of those or bools. The type after the arrow indicates the yield type of each definition.
-
-The second half the the translation scheme (after the colon) is the "post translation scheme", ie. what this production will look like after it is translated. The numbers refer to the index of a child of this production (eg. RESR here), indicating that this is where that child will be placed in the translation. Any non-integer members of the post translation scheme are tokens which will be printed unchanged in the final gforth output.
-
-While recursing into translations for children, the order of traversal of the children is determined by the order in the post translation scheme (eg. here we translate the second operand from ibtl before the first operand and then finally the operator's literal translation).
-
-
-Now, the only remaining question is how each production is assigned a translation scheme. After parsing and building the parse tree, but before translating, we run a "type checker". The type checker assigns translation schemes to the productions in the tree and ensures that the children of each production yield the appropriate type for the parent's translation scheme. This is accomplished by performing a bottom-up traversal of the parse tree and assigning return types to each node which then are used to determine the translation scheme of their parent nodes. At the bottommost level, all leaves are terminals, either constant values which have well defined return types (ie. an integer constant would return an integer) or terminals which do not have return types (ie. operators, parentheses, etc.). Terminals therefore have exactly one translation scheme.
-
-Using the above production as an example, we could have the following tree from the input ibtl "+ 12 5" (nodes in parentheses are terminals and therefore just tokens):
-
-+ RESR RESR					Translation Scheme: NULL
-	(operator: "+")
-	RESR					Translation Scheme: NULL
-		(integer: "12")
-	RESR					Translation Scheme: NULL
-		(integer: "5")
-
-The type checker would arrive at the topmost level, "+ RESR RESR", and immediately recurse into the first child, '(operator: "+")'. This terminal does not have a return type, so its node is assigned the return type NONE. 
-
-Having assigned a type to the operator terminal, comes back up a level and immediately recurses into the next child, a RESR. This RESR is an integer, so the typechecker assigns it the return type Int. The type checker comes back up a level again, recurses into the other RESR and assigns that one INT as well. The tree now looks like
-
-+ RESR RESR					Translation Scheme: NULL
-	(operator: "+")
-	RESR					Translation Scheme: -> Int
-		(integer: "12")
-	RESR					Translation Scheme: -> Int
-		(integer: "5")
-
-At this point, the type checker ones again arrives at the top level "+ RESR RESR". It has now assigned types to all of this node's children. It goes the production associated with this node and iterates over its translation schemes. It matches each childs' return type against the pre transation scheme's types and comes to the conclusion that the scheme "+ i i -> i" is appropriate here and assigns this translation scheme to this node and the tree now looks like
-
-+ RESR RESR					Translation Scheme: + Int Int -> Int
-	(operator: "+")
-	RESR					Translation Scheme: -> Int
-		(integer: "12")
-	RESR					Translation Scheme: -> Int
-		(integer: "5")
-
-Because this node's translation scheme indicates that it yields an integer, this node could be used as the child of another node which expects an integer yielding child such as in "- 7 + 12 5".
-
-This type checking algorithm goes up the whole tree, associating return types with all nodes until the topmost node is assigned a type (always NONE), ensuring that all nodes under it have types as well.
+These three pieces of information along with the implicit variable scope stack produced by associating scopes with nodes in the tree are all we need to implement block scope variables. When a variable is declared, an entry is added to the variable table in the first scope edge node above the let statement. When a variable is referenced, we ask the forst scope edge node above the reference for the posttranslation name or type, depending upon what we are looking for. If a scope edge node does not have an entry for the requested variable, it asks the scope edge above itself, all the way up until an entry is found or the topmost node reports there is no entry.

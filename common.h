@@ -55,6 +55,7 @@ struct Transition;
 struct ProdEle;
 struct PrUnit;
 struct PoUnit;
+struct VarDef;
 
 
 
@@ -72,6 +73,7 @@ typedef comDListIter<Token*>	TokListIter;
 typedef comVector<PrUnit*>		PrVec;
 typedef comVector<PoUnit*>		PoVec;
 typedef	comVector<TransScheme*>	TSVec;
+typedef comVector<VarDef*>		VDVec;
 
 
 

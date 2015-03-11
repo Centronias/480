@@ -23,6 +23,7 @@ class Parser {
   public:
 	static void			init(const comString&	grammarFile);
 	static void			run();
+	static void			typeCheck();
 	static void			buildGrammar(const comString&	filename);
 	static void			builtinGrammar();
 	static bool			parse(TokListIter&	tIter,

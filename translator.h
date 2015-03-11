@@ -34,13 +34,15 @@ class Translator {
 	static void				init();
 	static void				run();
 
+	static Type				getPrimType(const comString&	spelling);
+
 	static Type				getType(const comString&	spelling);
 	static const comString&	typeToString(Type	type)	{return m_typeNames[(UINT) type];}
 
   private:
 	static void				run(ParseTree*	tree,
 								FILE*		output);
-	static comString&		translateSpelling(Token*		token,
+	static comString&		translateSpelling(ParseTree*	tree,
 											  comString&	buf);
 	static comString		m_typeNames[Type::END];
 };

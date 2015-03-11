@@ -60,8 +60,10 @@ Terminal::Terminal(Token::Type		type,
 // ****************************************************************************
 // NonTerm::NonTerm()
 // ****************************************************************************
-NonTerm::NonTerm(const comString&	name)
-:	m_name(name)
+NonTerm::NonTerm(const comString&	name,
+				 bool				scopeEdge)
+:	m_name(name),
+	m_scopeEdge(scopeEdge)
 {
 	m_nTerms.append(this);
 }
@@ -169,7 +171,8 @@ ParseTree::ParseTree(NonTerm*	nTerm)
 	m_numChildren(0),
 	m_production(NULL),
 	m_token(NULL),
-	m_type(Translator::None)
+	m_type(Translator::None),
+	m_scopeEdge(nTerm->isScopeEdge())
 {
 	for (UINT i = 0; i < PT_MAX_CHILDREN; i++)
 		m_children[i] = NULL;
@@ -181,7 +184,8 @@ ParseTree::ParseTree(Terminal*	term,
 	m_numChildren(0),
 	m_production(NULL),
 	m_token(token),
-	m_type(Translator::None)
+	m_type(Translator::None),
+	m_scopeEdge(false)
 {
 	for (UINT i = 0; i < PT_MAX_CHILDREN; i++)
 		m_children[i] = NULL;
@@ -218,6 +222,7 @@ ParseTree::addChild(ParseTree*	child)
 	}
 
 	m_children[m_numChildren++] = child;
+	child->m_parent = this;
 }
 
 
@@ -276,8 +281,20 @@ ParseTree::print(UINT	level,
 	else
 		fprintf(file, "\n");
 
+	if (m_scopeEdge) {
+		for (UINT i = 0; i < level; i++)
+			fprintf(file, "\t");
+		fprintf(file, "v=v=v=v=v=v=v=v=v=v=v=v= SCOPE EDGE =v=v=v=v=v=v=v=v=v=v=v=v\n");
+	}
+
 	for (UINT i = 0; i < m_numChildren; i++)
 		m_children[i]->print(level + 1, file);
+
+	if (m_scopeEdge) {
+		for (UINT i = 0; i < level; i++)
+			fprintf(file, "\t");
+		fprintf(file, "^=^=^=^=^=^=^=^=^=^=^=^= SCOPE EDGE =^=^=^=^=^=^=^=^=^=^=^=^\n");
+	}
 }
 
 
@@ -296,9 +313,33 @@ void
 ParseTree::typeCheck(UINT&	lastLine)
 {
 	if (m_numChildren) {
-		// If this node has children, recurse into them.
-		for (UINT i = 0; i < m_numChildren; i++)
-			m_children[i]->typeCheck(lastLine);
+		// If this node is a regular node, just recurse into the children.
+		if (!m_production->isDeclarator()) {
+			for (UINT i = 0; i < m_numChildren; i++)
+				m_children[i]->typeCheck(lastLine);
+		} else {
+			// Otherwise, perform special declarator processing to add the new
+			// variable's declaration.
+			comString			spelling;
+			Translator::Type	type;
+
+			for (UINT i = 0; i < m_numChildren; i++) {
+				// Do not try and identify the type of identifiers.
+				if (!m_children[i]->isTerminal() || m_children[i]->getToken()->getType() != Token::Identifier)
+					m_children[i]->typeCheck(lastLine);
+
+				// Get the information required for the declaration.
+				if (m_children[i]->isTerminal()) {
+					if (m_children[i]->getToken()->getType() == Token::Identifier)
+						spelling = m_children[i]->getToken()->getSpelling();
+					else if (m_children[i]->getToken()->getType() == Token::PrimType)
+						type = m_children[i]->m_type;
+				}
+			}
+
+			// Finally, add the variable declaration.
+			addVarDef(spelling, type);
+		}
 
 		for (UINT i = 0; i < m_production->getTransSchemes().getNumEntries(); i++) {
 			PrVec&	pre		= m_production->getTransSchemes()[i]->getPreVec();
@@ -352,8 +393,19 @@ ParseTree::typeCheck(UINT&	lastLine)
 				m_type = Translator::Str;
 				break;
 			  case Token::Identifier:
-				fprintf(stderr, "Identifiers are not currently supported.\n");
-				Global::fail();
+				{
+					VarDef*	vd = findVarDef(m_token->getSpelling());
+					if (vd) {
+						m_type = vd->m_type;
+					} else {
+						fprintf(stderr, "Identifier \"%s\" on line \"%d\" not declared in this scope.\n", (const char*) m_token->getSpelling(), m_token->getLine());
+						Global::fail();
+					}
+				}
+				break;
+			  case Token::PrimType:
+				m_type = Translator::getPrimType(m_token->getSpelling());
+				break;
 			  default:
 				m_type = Translator::None;
 				break;
@@ -400,4 +452,85 @@ Production::matches(Production*	o)
 	}
 
 	return true;
+}
+
+
+
+// ****************************************************************************
+// VarDef::VarDef()
+// ****************************************************************************
+VarDef::VarDef(const comString&	rName,
+			   const comString&	oName,
+			   Translator::Type	type)
+:	m_preName(rName),
+	m_postName(oName),
+	m_type(type)
+{
+}
+
+
+
+// ****************************************************************************
+// ParseTree::addvarDef()
+// ****************************************************************************
+void
+ParseTree::addVarDef(const comString&	identifier,
+					 Translator::Type	type,
+					 bool				found)
+{
+	// If the production associated with this node of the parse tree is a scope
+	// edge, this node can hold the var def. Otherwise pass it on up to the
+	// parent.
+	if (m_scopeEdge) {
+		// If this is the first edge found, ignore it and go to the next one.
+		// We do this because let statements are themselves in scope edges and
+		// therefore require this hack to make it so declarations exist outside
+		// the let statements.
+		if (found) {
+			// We construct the post translation identifier by taking the pointer
+			// to this node (which is by definition unique for each node) and
+			// appending the pretranslation identifier to it. This should give us an
+			// identifier that looks something like "x034841829_identifierName"
+			char	buf[128];
+			sprintf(buf, "%p_%s", this, (const char*) identifier);
+			comString	post(buf + 1);
+
+			m_varDefs.append(new VarDef(identifier, post, type));
+		} else {
+			m_parent->addVarDef(identifier, type, true);
+		}
+	} else {
+		m_parent->addVarDef(identifier, type);
+	}
+}
+
+
+
+// ****************************************************************************
+// ParseTree::findVarDef()
+// ****************************************************************************
+VarDef*
+ParseTree::findVarDef(const comString&	identifier)
+{
+	// If the production associated with this node of the parse tree is a scope
+	// edge, this node may have the var def. If this is not found here or this
+	// node is not a scope edge, ask the parent node for the definition.
+	if (m_scopeEdge) {
+		VarDef*	ret = NULL;
+		for (UINT i = 0; i < m_varDefs.getNumEntries(); i++) {
+			if (m_varDefs[i]->m_preName == identifier) {
+				ret = m_varDefs[i];
+				break;
+			}
+		}
+
+		if (ret)
+			return ret;
+	}
+
+	// If this node has no parent, indicate that there is no definition.
+	if (!m_parent)
+		return NULL;
+	
+	return m_parent->findVarDef(identifier);
 }

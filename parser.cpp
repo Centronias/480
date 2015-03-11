@@ -74,8 +74,16 @@ Parser::run()
 		fprintf(stderr, "Failed to parse tokens\n");
 		Global::fail();
 	}
+}
 
 
+
+// ****************************************************************************
+// typeCheck()
+// ****************************************************************************
+void
+Parser::typeCheck()
+{
 	printf("Running type check.\n");
 	m_tree->typeCheck();
 	printf("Passed type check.\n");
@@ -306,15 +314,26 @@ Parser::buildGrammar(const comString&	filename)
 	// declarations.
 	while (fgets(line, 128, input)) {
 		// Get rid of icky line breaks.
-		for (char*	loc = line; *loc; loc++) {
-			if (*loc == '\n' || *loc =='\r')
+		for (char* loc = line; *loc; loc++) {
+			if (*loc == '\n' || *loc =='\r') 
 				*loc = '\0';
 		}
 
 		// If the first character on the line is not a tab, the line is a
 		// nonterminal declaration.
-		if (*line != '\t')
-			nTerms.append(new NonTerm(line));
+		if (*line != '\t') {
+			// If this nonterm is an edge node, truncate the line to clip off
+			// the edge node indicator and indicate it is such to the
+			// constructor.
+			char*	loc;
+			bool	scope	= false;
+			if ((loc = strstr(line, "@"))) {
+				*loc = '\0';
+				scope = true;
+			}
+
+			nTerms.append(new NonTerm(line, scope));
+		}
 	}
 
 	rewind(input);
@@ -426,10 +445,14 @@ Parser::buildGrammar(const comString&	filename)
 						*bLoc = '\0';
 						bool found = false;
 
-						// If the read in word is '->', we need to swap to the next
-						// loop to read in the translation scheme.
-						if (strcmp(buf, "->") == 0)
-							break;
+						// If the word read was '@', indicate that this
+						// production is a declarator, but do not add it to the
+						// list of production elements.
+						if (strcmp(buf, "@") == 0) {
+							prod->setDeclarator();
+							bLoc = buf;
+							continue;
+						}
 
 						for (UINT i = 0; i < nTerms.getNumEntries(); i++) {
 							if (nTerms[i]->getName() == buf) {
@@ -489,7 +512,12 @@ Parser::buildGrammar(const comString&	filename)
 		} else {
 			// The current line is a nonterm. Find it in the list of prepared
 			// nonterms and make it the current production.
+			char*	loc;
+			if ((loc = strstr(line, "@")))
+				*loc = '\0';
+
 			line[strlen(line)] = '\0';
+
 			for (UINT i = 0; i < nTerms.getNumEntries(); i++) {
 				if (nTerms[i]->getName() == line) {
 					current = nTerms[i];

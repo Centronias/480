@@ -11,7 +11,7 @@ S
 		: 0 1
 	id S_REC
 		: 0 1
-S_PAR
+S_PAR@
 	( S_PAR ) S_REC
 	string S_REC
 	int S_REC
@@ -21,46 +21,70 @@ S_PAR
 	:= id RESR
 		:= i i -> ~		: 2 1 !
 		:= b b -> ~		: 2 1 !
-		:= r r -> ~		: 2 1 f!
+		:= r i -> ~		: 2 s>f 1 f!
+		:= i r -> ~		: 2 f>s 1 !
+		:= s s -> ~		: 2 1 2!
 	+ RESR RESR
 		+ i i -> i		: 2 1 +
 		+ r r -> r		: 2 1 f+
+		+ i r -> i		: 2 1 s>f f+
+		+ r i -> r		: 2 s>f 1 f+
 		+ s s -> s		: 2 1 s+
 	- RESR RESR_MIN
 		- i i -> i		: 2 1 -
 		- r r -> r		: 2 1 f-
+		- i r -> i		: 2 1 s>f f-
+		- r i -> r		: 2 s>f 1 f-
 		- i ~ -> i		: 1 negate
 		- r ~ -> r		: 1 fnegate
 	* RESR RESR
 		* i i -> i		: 2 1 *
 		* r r -> r		: 2 1 f*
+		* i r -> i		: 2 1 s>f f*
+		* r i -> r		: 2 s>f 1 f*
 	/ RESR RESR
 		/ i i -> i		: 2 1 /
 		/ r r -> r		: 2 1 f/
+		/ i r -> i		: 2 1 s>f f/
+		/ r i -> r		: 2 s>f 1 f/
 	% RESR RESR
 		% i i -> i		: 2 1 /mod drop
 	^ RESR RESR
 		^ i i -> i		: 2 s>f 1 s>f f** f>s
 		^ r r -> r		: 2 1 f**
+		^ i r -> r		: 2 1 s>f f**
+		^ r i -> r		: 2 s>f 1 f**
 	= RESR RESR
 		= i i -> b		: 2 1 =
 		= r r -> b		: 2 1 f=
+		= i r -> b		: 2 1 s>f f=
+		= r i -> b		: 2 s>f 1 f=
 		= b b -> b		: 2 1 0=
 	> RESR RESR
 		> i i -> b		: 2 1 >
 		> r r -> b		: 2 1 f>
+		> i r -> b		: 2 1 s>f f>
+		> r i -> b		: 2 s>f 1 f>
 	>= RESR RESR
 		>= i i -> b		: 2 1 >=
 		>= r r -> b		: 2 1 f>=
+		>= i r -> b		: 2 1 s>f f>=
+		>= r i -> b		: 2 s>f 1 f>=
 	< RESR RESR
 		< i i -> b		: 2 1 <
 		< r r -> b		: 2 1 f<
+		< i r -> b		: 2 1 s>f f<
+		< r i -> b		: 2 s>f 1 f<
 	<= RESR RESR
 		<= i i -> b		: 2 1 <=
 		<= r r -> b		: 2 1 f<=
+		<= i r -> b		: 2 1 s>f f<=
+		<= r i -> b		: 2 s>f 1 f<=
 	!= RESR RESR
 		<> i i -> b		: 2 1 <>
 		<> r r -> b		: 2 1 f<>
+		<> i r -> b		: 2 1 s>f f<>
+		<> r i -> b		: 2 s>f 1 f<>
 	or RESR RESR
 		or b b -> b		: 2 1 or
 	and RESR RESR
@@ -69,16 +93,22 @@ S_PAR
 		not b -> b		: 1 invert
 	sin RESR
 		sin i -> r		: 1 s>f fsin
+		sin r -> r		: 1 fsin
 	cos RESR
 		cos i -> r		: 1 s>f fcos
+		cos r -> r		: 1 fcos
 	tan RESR
 		tan i -> r		: 1 s>f ftan
+		tan r -> r		: 1 ftan
 	if RESR EXPR ELSE
 		if b @ @ -> ~	: 1 if 2 else 3 then
 	while RESR EXPR EXPRLIST
 		while b @ @ -> ~	: begin 1 invert if leave else 2 3 then again 
-	let ( ( id type ) VARLIST )
-		:
+	@ let ( ( id type ) VARLIST )
+		let ( ( ~ i ) ~ ) -> ~	: variable 3 6
+		let ( ( ~ b ) ~ ) -> ~	: variable 3 6
+		let ( ( ~ r ) ~ ) -> ~	: fvariable 3 6
+		let ( ( ~ s ) ~ ) -> ~	: 2variable 3 6
 	stdout RESR
 		stdout i -> ~	: 1 .
 		stdout r -> ~	: 1 f.
@@ -96,10 +126,7 @@ S_REC
 	~
 EXPR
 	( EXPR_PAR )
-		( s ) -> s	: 1
-		( i ) -> i	: 1
-		( b ) -> b	: 1
-		( r ) -> r	: 1
+		: 1
 	string
 		s : 0
 	int
@@ -109,7 +136,10 @@ EXPR
 	bool
 		b : 0
 	id
-		: 0
+		i -> i	: 0 @
+		r -> r	: 0 f@
+		b -> b	: 0 @
+		s -> s	: 0 2@
 EXPR_PAR
 	:= id RESR
 	+ RESR RESR
@@ -188,8 +218,11 @@ EXPRLIST
 		: 1
 	~
 VARLIST
-	( id type ) VARLIST
-		:
+	@ ( id type ) VARLIST
+		( ~ i ) ~ -> ~ : variable 3 6
+		( ~ b ) ~ -> ~ : variable 3 6
+		( ~ r ) ~ -> ~ : fvariable 3 6
+		( ~ s ) ~ -> ~ : 2variable 3 6
 	~
 ELSE
 	( EXPR_PAR )

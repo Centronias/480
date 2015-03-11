@@ -69,6 +69,10 @@ Translator::getType(const comString&	spelling)
 void
 Translator::run()
 {
+	// Run the type check before we translate. We do this here because the
+	// parser can successfully parse without getting types matched.
+	Parser::typeCheck();
+
 	printf("Running translator.\n");
 	FILE*	output = fopen("translated.forth", "w");
 	run(Parser::m_tree, output);
@@ -85,7 +89,7 @@ Translator::run(ParseTree*	tree,
 		// ... and it's a terminal, just print it.
 		if (tree->isTerminal()) {
 			comString	buf;
-			fprintf(output, "%s ", (const char*) translateSpelling(tree->getToken(), buf));
+			fprintf(output, "%s ", (const char*) translateSpelling(tree, buf));
 			return;
 		}
 
@@ -120,9 +124,11 @@ Translator::run(ParseTree*	tree,
 // Translator::translateSpelling()
 // ****************************************************************************
 comString&
-Translator::translateSpelling(Token*		token,
+Translator::translateSpelling(ParseTree*	tree,
 							  comString&	buf)
 {
+	Token*	token = tree->getToken();
+
 	switch (token->getType()) {
 	  case Token::BoolConst:
 		if (token->getSpelling() == "true")
@@ -138,10 +144,39 @@ Translator::translateSpelling(Token*		token,
 			return buf = cBuf;
 		}
 		break;
-
+	  case Token::Identifier:
+		{
+			VarDef*	vd = tree->findVarDef(token->getSpelling());
+			if (vd) {
+				return buf = vd->m_postName;
+			} else {
+				fprintf(stderr, "Failed to find variable definition for identifier \"%s\" on line %d.\n", (const char*) token->getSpelling(), token->getLine());
+				Global::fail();
+			}
+		}
 	  default:
 		break;
 	}
 
 	return buf = token->getSpelling();
+}
+
+
+
+// ****************************************************************************
+// Translator::getPrimType()
+// ****************************************************************************
+Translator::Type
+Translator::getPrimType(const comString&	spelling)
+{
+	if (spelling == "int")
+		return Translator::Int;
+	else if (spelling == "real")
+		return Translator::Float;
+	else if (spelling == "bool")
+		return Translator::Bool;
+	else if (spelling == "string")
+		return Translator::Str;
+	else
+		return Translator::None;
 }
