@@ -40,6 +40,7 @@ struct ProdEle {
 // ****************************************************************************
 class Production : public ProdEleVec {
   public:
+  						Production();
 						~Production();
 
 	void				add(Terminal*	t)	{append(new ProdEle(t));}
@@ -48,6 +49,10 @@ class Production : public ProdEleVec {
 
 	void				setDeclarator()	{m_declarator = true;}
 	bool				isDeclarator()	{return m_declarator;}
+	void				setFuncDeclarator()	{m_fDeclarator = true;}
+	bool				isFuncDeclarator()	{return m_fDeclarator;}
+	void				setFuncInvocation()	{m_funcInv = true;}
+	bool				isFuncInvocation()	{return m_funcInv;}
 
 	comString&			printable(comString&	buf);
 	bool				matches(Production*	o);
@@ -57,6 +62,8 @@ class Production : public ProdEleVec {
   private:
 	TSVec				m_tSchemes;
 	bool				m_declarator;
+	bool				m_fDeclarator;
+	bool				m_funcInv;
 };
 
 
@@ -121,6 +128,7 @@ class ParseTree {
 	void				addChild(ParseTree*	child);
 	void				cullChildren();
 	ParseTree*			getChild(UINT	i)	{return m_children[i];}
+	UINT				getNumChildren()	{return m_numChildren;}
 
 	void				setProduction(Production*	production)	{m_production = production;}
 	Production*			getProduction()	{return m_production;}
@@ -138,6 +146,9 @@ class ParseTree {
 	const comString&	getDesc()	{return m_prodEle.toString();}
 	TransScheme*		getScheme()	{return m_scheme;}
 	Token*				getToken()	{return m_token;}
+
+	void				forceScopeEdge()	{m_scopeEdge = true;}
+	void				forceVarDef(VarDef*	def)	{m_varDefs.append(def);}
 
   private:
 	void				print(UINT	level,
@@ -159,7 +170,7 @@ class ParseTree {
 
 
 // ****************************************************************************
-// VarDef Struct
+// VarDef class
 // ****************************************************************************
 class VarDef {
   public:
@@ -174,6 +185,27 @@ class VarDef {
 	Translator::Type	m_type;
 
 	static VDVec		m_varDefs;
+};
+
+
+
+// ****************************************************************************
+// FuncDef class
+// ****************************************************************************
+class FuncDef {
+  public:
+						FuncDef(const comString&	name,
+								Translator::Type	type,
+								ParseTree*			tree);
+
+	static void			printFuncDefHeader(FILE*	file);
+
+	const comString			m_identifier;
+	const Translator::Type	m_type;
+	VDVec					m_params;
+	ParseTree*				m_definition;
+
+	static FDVec		m_funcDefs;
 };
 
 

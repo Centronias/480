@@ -39,6 +39,8 @@ class Translator {
 	static Type				getType(const comString&	spelling);
 	static const comString&	typeToString(Type	type)	{return m_typeNames[(UINT) type];}
 
+	static void				buildFunction(ParseTree*	tree);
+
   private:
 	static void				run(ParseTree*	tree,
 								FILE*		output);

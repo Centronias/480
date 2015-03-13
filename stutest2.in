@@ -1,13 +1,13 @@
-
 (
+	(let
+		( ( test parm ) ( int string ) )
+		(stdout "testing")
+		1
+	)
+
 	(let (
-		(cutie string)
-		(otherCutie string)
-		(printy string)
+		(res int)
 	))
 
-	(:= cutie "Travis")
-	(:= otherCutie "Charlie")
-	(:= printy (+ (+ cutie " loves ") otherCutie))
-	(stdout printy)
+	(:= res (test "cookies"))
 )

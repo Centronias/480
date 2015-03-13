@@ -28,7 +28,7 @@
 #define UINT	unsigned int
 #define BYTE	unsigned char
 
-#define PT_MAX_CHILDREN	10
+#define PT_MAX_CHILDREN	13
 
 
 
@@ -52,6 +52,7 @@ class Terminal;
 class Translator;
 class TransScheme;
 class VarDef;
+class FuncDef;
 struct Transition;
 struct ProdEle;
 struct PrUnit;
@@ -74,6 +75,7 @@ typedef comVector<PrUnit*>		PrVec;
 typedef comVector<PoUnit*>		PoVec;
 typedef	comVector<TransScheme*>	TSVec;
 typedef comVector<VarDef*>		VDVec;
+typedef comVector<FuncDef*>		FDVec;
 
 
 

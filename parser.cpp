@@ -458,6 +458,24 @@ Parser::buildGrammar(const comString&	filename)
 							continue;
 						}
 
+						// If the word read was '#', indicate that this
+						// production is a function declarator, but do not add
+						// it to the list of production elements.
+						if (strcmp(buf, "#") == 0) {
+							prod->setFuncDeclarator();
+							bLoc = buf;
+							continue;
+						}
+
+						// If the word read was '!', indicate that this
+						// production is a function invocation, but do not add
+						// it to the list of production elements.
+						if (strcmp(buf, "!") == 0) {
+							prod->setFuncInvocation();
+							bLoc = buf;
+							continue;
+						}
+
 						for (UINT i = 0; i < nTerms.getNumEntries(); i++) {
 							if (nTerms[i]->getName() == buf) {
 								prod->add(nTerms[i]);

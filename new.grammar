@@ -1,0 +1,68 @@
+S
+	( )
+	( S )
+	S S
+	EXPR
+EXPR
+	OPER
+	( STMTS )
+OPER
+	( := id OPER )
+	( BINOPS OPER OPER )
+	( UNOPS OPER )
+	( := id ( id PARAMLIST ) )
+	string
+	int
+	float
+	bool
+	id
+BINOPS
+	+
+	-
+	*
+	/
+	%
+	^
+	=
+	>
+	>=
+	<
+	<=
+	!=
+	or
+	and
+UNOPS
+	-
+	not
+	sin
+	cos
+	tan
+STMTS
+	if EXPR EXPR ELSE
+	while EXPR EXPR EXPRLIST
+	let LET
+	stdout OPER
+ELSE
+	EXPR
+	~
+LET
+	( ( id LET_PAREN
+LET_PAREN
+	type ) VARLIST )
+	id FUNLIST ) ( type FUNTYPE ) ) EXPR EXPRLIST
+	) ( type FUNTYPE ) ) EXPR EXPRLIST
+EXPRLIST
+	EXPR EXPRLIST
+	~
+VARLIST
+	( id type ) VARLIST
+	~
+FUNLIST
+	id FUNLIST
+	~
+FUNTYPE
+	type FUNTYPE
+	~
+PARAMLIST
+	OPER PARAMLIST
+	~

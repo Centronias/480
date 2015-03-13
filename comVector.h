@@ -31,6 +31,8 @@ class comVector {
 	T&					get(const UINT	index);
 	UINT				getNumEntries()	const {return m_numEntries;}
 
+	void				forceZero()	{m_numEntries = 0;}
+
   protected:
 	UINT				m_numEntries;
 	UINT				m_size;

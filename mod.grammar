@@ -106,11 +106,8 @@ S_PAR@
 	while RESR EXPR EXPRLIST
 		while b @ @ -> ~	: begin 1 while 2 3 repeat
 	@ let ( ( id type ) VARLIST )
-		let ( ( ~ i ) ~ ) -> ~	:
-		let ( ( ~ r ) ~ ) -> ~	:
-		let ( ( ~ b ) ~ ) -> ~	:
-		let ( ( ~ s ) ~ ) -> ~	:
-	@ let ( ( id FUNLIST ) ( type FUNTYPE ) ) EXPR EXPRLIST
+		let ( ( ~ ~ ) ~ ) -> ~	:
+	# let ( ( id FUNLIST ) ( type FUNTYPE ) ) EXPR EXPRLIST
 		let ( ( ~ ~ ) ( ~ ~ ) ) @ @ -> ~ :
 	stdout RESR
 		stdout i -> ~	: 1 .
@@ -246,17 +243,17 @@ FUNTYPE
 	~
 PARAMLIST
 	( OPER ) PARAMLIST
-		( @ ) ~ -> ~	: 1 3
+		: 1 3
 	string PARAMLIST
-		s ~ -> ~		: 0 1
+		: 0 1
 	int PARAMLIST
-		i ~ -> ~		: 0 1
+		: 0 1
 	real PARAMLIST
-		r ~ -> ~		: 0 1
+		: 0 1
 	bool PARAMLIST
-		b ~ -> ~		: 0 1
+		: 0 1
 	id PARAMLIST
-		@ ~ -> ~		: 0 1
+		: 0 1
 	~
 ASSIGNMENT
 	( ASSIGNMENT_PAREN )
@@ -270,7 +267,6 @@ ASSIGNMENT
 	bool
 	id
 ASSIGNMENT_PAREN
-	:= id ASSIGNMENT
 	+ RESR RESR
 	- RESR RESR_MIN
 	* RESR RESR
@@ -289,5 +285,5 @@ ASSIGNMENT_PAREN
 	sin RESR
 	cos RESR
 	tan RESR
-	id PARAMLIST
+	! id PARAMLIST
 		~ ~ -> ~	: 1 0

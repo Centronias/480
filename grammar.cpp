@@ -20,6 +20,7 @@
 // ****************************************************************************
 NTermVec				NonTerm::m_nTerms;
 VDVec					VarDef::m_varDefs;
+FDVec					FuncDef::m_funcDefs;
 
 
 
@@ -315,12 +316,12 @@ ParseTree::typeCheck(UINT&	lastLine)
 {
 	if (m_numChildren) {
 		// If this node is a regular node, just recurse into the children.
-		if (!m_production->isDeclarator()) {
+		if (!m_production->isDeclarator() && !m_production->isFuncDeclarator()) {
 			for (UINT i = 0; i < m_numChildren; i++)
 				m_children[i]->typeCheck(lastLine);
-		} else {
-			// Otherwise, perform special declarator processing to add the new
-			// variable's declaration.
+		} else if (m_production->isDeclarator()) {
+			// If this is a variable declarator, perform special declarator
+			// processing to add the new variable's declaration.
 			comString			spelling;
 			Translator::Type	type;
 
@@ -340,6 +341,18 @@ ParseTree::typeCheck(UINT&	lastLine)
 
 			// Finally, add the variable declaration.
 			addVarDef(spelling, type);
+
+			return;
+		} else if (m_production->isFuncDeclarator()) {
+			// If this is a function declarator, perform special declarator
+			// processing to add the new variable's declaration.
+			Translator::buildFunction(this);
+			return;
+		}
+
+		// If this is a function invokation, do not try to checke the types manually.
+		if (m_production->isFuncInvocation()) {
+
 		}
 
 		for (UINT i = 0; i < m_production->getTransSchemes().getNumEntries(); i++) {
@@ -415,6 +428,18 @@ ParseTree::typeCheck(UINT&	lastLine)
 			lastLine = m_token->getLine();
 		}
 	}
+}
+
+
+
+// ****************************************************************************
+// Production::Production()
+// ****************************************************************************
+Production::Production()
+:	m_declarator(false),
+	m_fDeclarator(false),
+	m_funcInv(false)
+{
 }
 
 
@@ -569,4 +594,19 @@ VarDef::printVarDefHeader(FILE*	file)
 
 		fprintf(file, "%s %s ", (const char*) decl, (const char*) def->m_postName);
 	}
+}
+
+
+
+// ****************************************************************************
+// FuncDef::FuncDef()
+// ****************************************************************************
+FuncDef::FuncDef(const comString&	identifier,
+				 Translator::Type	type,
+				 ParseTree*			tree)
+:	m_identifier(identifier),
+	m_type(type),
+	m_definition(tree)
+{
+	m_funcDefs.append(this);
 }

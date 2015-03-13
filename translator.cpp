@@ -18,7 +18,7 @@
 // ****************************************************************************
 // Initialize Static Members
 // ****************************************************************************
-comString	Translator::m_typeNames[];
+comString					Translator::m_typeNames[];
 
 
 
@@ -180,6 +180,76 @@ Translator::getPrimType(const comString&	spelling)
 		return Translator::Bool;
 	else if (spelling == "string")
 		return Translator::Str;
-	else
+	else {
+		fprintf(stderr, "WARNING: Tried to parse \"%s\" into primitive type.\n", (const char*) spelling);
 		return Translator::None;
+	}
+}
+
+
+
+// ****************************************************************************
+// Translator::buildFunction()
+// ****************************************************************************
+void
+Translator::buildFunction(ParseTree*	tree)
+{	
+	// Admittedly a hack.
+	tree->forceScopeEdge();
+
+	// We know that this is a parse tree using the production
+	//	let ( ( id FUNLIST ) ( type FUNTYPE ) ) EXPR EXPRLIST
+	// Immediately create a function definition.
+	const comString&	fId		= tree->getChild(3)->getToken()->getSpelling();
+	Translator::Type	type	= Translator::getPrimType(tree->getChild(7)->getToken()->getSpelling());
+	FuncDef*	def = new FuncDef(fId, type, tree);
+
+	// Look for parameters.
+	const comString*	identifier;
+	VarDef*				vDef = NULL;
+	ParseTree*			iRec = tree->getChild(4);
+	ParseTree*			tRec = tree->getChild(8);
+	bool				foundIdentifier	= false;
+	bool				foundType		= false;
+	char				prefix[64];
+	char				postName[64];
+	sprintf(prefix, "%p_%s_", tree, (const char*) fId);
+
+	while (true) {
+		foundIdentifier	= false;
+		foundType		= false;
+
+		// If this node has children, this node has a parameter id. Its
+		// production looks like
+		// 	id FUNLIST
+		if (iRec->getNumChildren()) {
+			identifier = &iRec->getChild(0)->getToken()->getSpelling();
+			iRec = iRec->getChild(1);
+			foundIdentifier = true;
+		}
+
+		// If this node has children, this node has a parameter type. Its
+		// production looks like
+		// 	type FUNTYPE
+		if (tRec->getNumChildren()) {
+			type = Translator::getPrimType(tRec->getChild(0)->getToken()->getSpelling());
+			tRec = tRec->getChild(1);
+			foundType = true;	
+		}
+
+		if (foundType && foundIdentifier) {
+			// We got a type and an identifier. Make them into a parameter.
+			sprintf(postName, "%s%s", prefix + 1, (const char*) *identifier);
+			vDef = new VarDef(*identifier, postName, type);
+			tree->forceVarDef(vDef);
+			def->m_params.append(vDef);
+		} else if (foundType || foundIdentifier) {
+			// We got one or the other but not both. Error out.
+			fprintf(stderr, "Mismatched number of parameter types and identifiers for function \"%s\"\n", (const char*) fId);
+			Global::fail();
+		} else {
+			// Otherwise we didn't get either and will stop looking for parameters.
+			break;
+		}
+	}
 }
