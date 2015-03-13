@@ -161,14 +161,19 @@ class ParseTree {
 // ****************************************************************************
 // VarDef Struct
 // ****************************************************************************
-struct VarDef {
+class VarDef {
+  public:
+						VarDef(const comString&	rName,
+							   const comString&	oName,
+							   Translator::Type	type);
+
+	static void			printVarDefHeader(FILE*	file);
+
 	const comString		m_preName;
 	const comString		m_postName;
 	Translator::Type	m_type;
 
-						VarDef(const comString&	rName,
-							   const comString&	oName,
-							   Translator::Type	type);
+	static VDVec		m_varDefs;
 };
 
 

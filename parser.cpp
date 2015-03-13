@@ -163,6 +163,7 @@ Parser::parse(TokListIter&	iter,
 			// parsed and return.
 			tree->setProduction(prod);
 			tokensParsed += tokensConsumed;
+
 			return true;
 		} else {
 			// If the current production did not succeed, roll back the
@@ -410,11 +411,14 @@ Parser::buildGrammar(const comString&	filename)
 
 							prIndex++;
 						} else {
-							if (Global::isNumeric(buf)) {
+							if (*buf != '#' && Global::isNumeric(buf)) {
 								tScheme->addPost((UINT) atoi(buf));
 								bLoc = buf;
 							} else {
-								tScheme->addPost(buf);
+								if (*buf == '#')
+									tScheme->addPost(buf + 1);
+								else
+									tScheme->addPost(buf);
 								bLoc = buf;
 							}
 						}

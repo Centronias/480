@@ -1,13 +1,13 @@
-(
-	(let ((x int)))
-	
-	(:= x 5)
-
-	(while (= 5 x)
-		(:= x (- x 1))
-	)
-)
 
 (
-	(+ (+ 1 1) (+ 1 1))
+	(let (
+		(cutie string)
+		(otherCutie string)
+		(printy string)
+	))
+
+	(:= cutie "Travis")
+	(:= otherCutie "Charlie")
+	(:= printy (+ (+ cutie " loves ") otherCutie))
+	(stdout printy)
 )

@@ -12,8 +12,8 @@
 
 CCC = g++
 CCFLAGS = -fmax-errors=10 -Wall -std=gnu++11
-OBJS = comString.o token.o symbolTable.o state.o lexer.o grammar.o parser.o global.o tu.o translator.o
-SOURCE = lexer.cpp state.cpp comString.cpp symboltable.cpp token.cpp grammar.cpp parser.cpp global.cpp tu.cpp translator.cpp
+OBJS = comString.o token.o state.o lexer.o grammar.o parser.o global.o tu.o translator.o
+SOURCE = lexer.cpp state.cpp comString.cpp token.cpp grammar.cpp parser.cpp global.cpp tu.cpp translator.cpp
 RUNFLAGS =
 
 $(OBJS): $(SOURCE)

@@ -20,75 +20,76 @@ S_PAR@
 	id S_REC
 	:= id RESR
 		:= i i -> ~		: 2 1 !
+		:= r r -> ~		: 2 1 f!
 		:= b b -> ~		: 2 1 !
 		:= r i -> ~		: 2 s>f 1 f!
 		:= i r -> ~		: 2 f>s 1 !
 		:= s s -> ~		: 2 1 2!
 	+ RESR RESR
-		+ i i -> i		: 2 1 +
-		+ r r -> r		: 2 1 f+
-		+ i r -> i		: 2 1 s>f f+
-		+ r i -> r		: 2 s>f 1 f+
-		+ s s -> s		: 2 1 s+
+		+ i i -> i		: 1 2 +
+		+ r r -> r		: 1 2 f+
+		+ i r -> i		: 1 s>f 2 f+
+		+ r i -> r		: 1 2 s>f f+
+		+ s s -> s		: 1 2 s+
 	- RESR RESR_MIN
-		- i i -> i		: 2 1 -
-		- r r -> r		: 2 1 f-
-		- i r -> i		: 2 1 s>f f-
-		- r i -> r		: 2 s>f 1 f-
+		- i i -> i		: 1 2 -
+		- r r -> r		: 1 2 f-
+		- i r -> i		: 1 s>f 2 f-
+		- r i -> r		: 1 2 s>f f-
 		- i ~ -> i		: 1 negate
 		- r ~ -> r		: 1 fnegate
 	* RESR RESR
-		* i i -> i		: 2 1 *
-		* r r -> r		: 2 1 f*
-		* i r -> i		: 2 1 s>f f*
-		* r i -> r		: 2 s>f 1 f*
+		* i i -> i		: 1 2 *
+		* r r -> r		: 1 2 f*
+		* i r -> i		: 1 s>f 2 f*
+		* r i -> r		: 1 2 s>f f*
 	/ RESR RESR
-		/ i i -> i		: 2 1 /
-		/ r r -> r		: 2 1 f/
-		/ i r -> i		: 2 1 s>f f/
-		/ r i -> r		: 2 s>f 1 f/
+		/ i i -> i		: 1 2 /
+		/ r r -> r		: 1 2 f/
+		/ i r -> i		: 1 s>f 2 f/
+		/ r i -> r		: 1 2 s>f f/
 	% RESR RESR
-		% i i -> i		: 2 1 /mod drop
+		% i i -> i		: 1 2 /mod drop
 	^ RESR RESR
-		^ i i -> i		: 2 s>f 1 s>f f** f>s
-		^ r r -> r		: 2 1 f**
-		^ i r -> r		: 2 1 s>f f**
-		^ r i -> r		: 2 s>f 1 f**
+		^ i i -> i		: 1 s>f 2 s>f f** f>s
+		^ r r -> r		: 1 2 f**
+		^ i r -> r		: 1 s>f 2 f**
+		^ r i -> r		: 1 2 s>f f**
 	= RESR RESR
-		= i i -> b		: 2 1 =
-		= r r -> b		: 2 1 f=
-		= i r -> b		: 2 1 s>f f=
-		= r i -> b		: 2 s>f 1 f=
-		= b b -> b		: 2 1 0=
+		= i i -> b		: 1 2 =
+		= r r -> b		: 1 2 f=
+		= i r -> b		: 1 s>f 2 f=
+		= r i -> b		: 1 2 s>f f=
+		= b b -> b		: 1 2 0=
 	> RESR RESR
-		> i i -> b		: 2 1 >
-		> r r -> b		: 2 1 f>
-		> i r -> b		: 2 1 s>f f>
-		> r i -> b		: 2 s>f 1 f>
+		> i i -> b		: 1 2 >
+		> r r -> b		: 1 2 f>
+		> i r -> b		: 1 s>f 2 f>
+		> r i -> b		: 1 2 s>f f>
 	>= RESR RESR
-		>= i i -> b		: 2 1 >=
-		>= r r -> b		: 2 1 f>=
-		>= i r -> b		: 2 1 s>f f>=
-		>= r i -> b		: 2 s>f 1 f>=
+		>= i i -> b		: 1 2 >=
+		>= r r -> b		: 1 2 f>=
+		>= i r -> b		: 1 s>f 2 f>=
+		>= r i -> b		: 1 2 s>f f>=
 	< RESR RESR
-		< i i -> b		: 2 1 <
-		< r r -> b		: 2 1 f<
-		< i r -> b		: 2 1 s>f f<
-		< r i -> b		: 2 s>f 1 f<
+		< i i -> b		: 1 2 <
+		< r r -> b		: 1 2 f<
+		< i r -> b		: 1 s>f 2 f<
+		< r i -> b		: 1 2 s>f f<
 	<= RESR RESR
-		<= i i -> b		: 2 1 <=
-		<= r r -> b		: 2 1 f<=
-		<= i r -> b		: 2 1 s>f f<=
-		<= r i -> b		: 2 s>f 1 f<=
+		<= i i -> b		: 1 2 <=
+		<= r r -> b		: 1 2 f<=
+		<= i r -> b		: 1 s>f 2 f<=
+		<= r i -> b		: 1 2 s>f f<=
 	!= RESR RESR
-		<> i i -> b		: 2 1 <>
-		<> r r -> b		: 2 1 f<>
-		<> i r -> b		: 2 1 s>f f<>
-		<> r i -> b		: 2 s>f 1 f<>
+		<> i i -> b		: 1 2 <>
+		<> r r -> b		: 1 2 f<>
+		<> i r -> b		: 1 s>f 2 f<>
+		<> r i -> b		: 1 2 s>f f<>
 	or RESR RESR
-		or b b -> b		: 2 1 or
+		or b b -> b		: 1 2 or
 	and RESR RESR
-		or b b -> b		: 2 1 and
+		or b b -> b		: 1 2 and
 	not RESR
 		not b -> b		: 1 invert
 	sin RESR
@@ -103,12 +104,12 @@ S_PAR@
 	if RESR EXPR ELSE
 		if b @ @ -> ~	: 1 if 2 else 3 then
 	while RESR EXPR EXPRLIST
-		while b @ @ -> ~	: begin 1 invert if leave else 2 3 then again 
+		while b @ @ -> ~	: begin 1 while 2 3 repeat
 	@ let ( ( id type ) VARLIST )
-		let ( ( ~ i ) ~ ) -> ~	: variable 3 6
-		let ( ( ~ b ) ~ ) -> ~	: variable 3 6
-		let ( ( ~ r ) ~ ) -> ~	: fvariable 3 6
-		let ( ( ~ s ) ~ ) -> ~	: 2variable 3 6
+		let ( ( ~ i ) ~ ) -> ~	:
+		let ( ( ~ b ) ~ ) -> ~	:
+		let ( ( ~ r ) ~ ) -> ~	:
+		let ( ( ~ s ) ~ ) -> ~	:
 	stdout RESR
 		stdout i -> ~	: 1 .
 		stdout r -> ~	: 1 f.
@@ -219,10 +220,10 @@ EXPRLIST
 	~
 VARLIST
 	@ ( id type ) VARLIST
-		( ~ i ) ~ -> ~ : variable 3 6
-		( ~ b ) ~ -> ~ : variable 3 6
-		( ~ r ) ~ -> ~ : fvariable 3 6
-		( ~ s ) ~ -> ~ : 2variable 3 6
+		( ~ i ) ~ -> ~ :
+		( ~ b ) ~ -> ~ :
+		( ~ r ) ~ -> ~ :
+		( ~ s ) ~ -> ~ :
 	~
 ELSE
 	( EXPR_PAR )

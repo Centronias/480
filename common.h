@@ -51,11 +51,11 @@ class Production;
 class Terminal;
 class Translator;
 class TransScheme;
+class VarDef;
 struct Transition;
 struct ProdEle;
 struct PrUnit;
 struct PoUnit;
-struct VarDef;
 
 
 
@@ -92,7 +92,6 @@ typedef comVector<VarDef*>		VDVec;
 // ****************************************************************************
 #include "token.h"
 #include "translator.h"
-#include "symbolTable.h"
 #include "state.h"
 #include "grammar.h"
 #include "lexer.h"

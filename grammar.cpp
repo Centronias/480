@@ -19,6 +19,7 @@
 // Initialize Static Members
 // ****************************************************************************
 NTermVec				NonTerm::m_nTerms;
+VDVec					VarDef::m_varDefs;
 
 
 
@@ -466,6 +467,7 @@ VarDef::VarDef(const comString&	rName,
 	m_postName(oName),
 	m_type(type)
 {
+	m_varDefs.append(this);
 }
 
 
@@ -533,4 +535,38 @@ ParseTree::findVarDef(const comString&	identifier)
 		return NULL;
 	
 	return m_parent->findVarDef(identifier);
+}
+
+
+
+// ****************************************************************************
+// VarDef::printVarDefHeader()
+// ****************************************************************************
+void
+VarDef::printVarDefHeader(FILE*	file)
+{
+	VarDef*		def = NULL;
+	comString	decl;
+	for (UINT i = 0; i < m_varDefs.getNumEntries(); i++) {
+		def = m_varDefs[i];
+
+		switch (def->m_type) {
+		  case Translator::Int:
+			case Translator::Bool:
+			decl = "variable";
+			break;
+		  case Translator::Float:
+			decl = "fvariable";
+			break;
+		  case Translator::Str:
+			decl = "2variable";
+			break;
+		  default:
+			fprintf(stderr, "Encountered variable with improper type.\n");
+			Global::fail();
+			break;
+		}
+
+		fprintf(file, "%s %s ", (const char*) decl, (const char*) def->m_postName);
+	}
 }

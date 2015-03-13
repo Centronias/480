@@ -75,7 +75,10 @@ Translator::run()
 
 	printf("Running translator.\n");
 	FILE*	output = fopen("translated.forth", "w");
+	VarDef::printVarDefHeader(output);
+	fprintf(output, ": main\n");
 	run(Parser::m_tree, output);
+	fprintf(output, "\n; main");
 	fclose(output);
 	printf("Done running translator.\n");
 }
