@@ -164,6 +164,14 @@ Translator::translateSpelling(ParseTree*	tree,
 				Global::fail();
 			}
 		}
+	  case Token::RealConst:
+		if (!strstr(token->getSpelling(), "e")) {
+			char	cBuf[64];
+			sprintf(cBuf, "%se", ((const char*) token->getSpelling()));
+
+			return buf = cBuf;
+		}
+		break;
 	  default:
 		break;
 	}
@@ -376,6 +384,9 @@ Translator::translateFuncInvocation(ParseTree*	tree,
 		  case Translator::Float:
 			fprintf(output, "f! ");
 			break;
+		  default:
+			fprintf(stderr, "Unexpected param type");
+			Global::fail();
 		}
 
 		pRec = pRec->getChild(pNext);

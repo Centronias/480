@@ -1,12 +1,32 @@
 (
 	(let
-		( ( test parm ) ( int string ) )
-		(stdout parm)
+		((integral steps a b)
+		(real int real real))
+
+		(let (
+			(area real)
+			(width real)
+			(x real)
+		))
+
+
+		(:= area 0)
+		(:= x a)
+		(:= width (/ (- b a) steps))
+
+		(while (< x b)
+			(:= area (+ area (* (^ x 2) width)))
+			(:= x (+ x width))
+		)
+
+		area
 	)
 
-	(let (
-		(res int)
+	(let(
+		(res real)
 	))
 
-	(:= res (test "cookies"))
+	(:= res (integral 100 0. 1.))
+
+	(stdout res)
 )
