@@ -32,7 +32,8 @@ PrUnit::PrUnit(Translator::Type	type,
 // ****************************************************************************
 PoUnit::PoUnit(const comString&	keyword)
 :	m_keyword(keyword),
-	m_isKeyword(true)
+	m_isKeyword(true),
+    m_index(-1)
 {
 }
 

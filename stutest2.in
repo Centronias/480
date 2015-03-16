@@ -1,8 +1,7 @@
 (
 	(let
 		( ( test parm ) ( int string ) )
-		(stdout "testing")
-		1
+		(stdout parm)
 	)
 
 	(let (

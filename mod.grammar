@@ -162,8 +162,8 @@ EXPR_PAR
 	tan RESR
 	if RESR EXPR ELSE
 	while RESR EXPR EXPRLIST
-	let ( ( id type ) VARLIST )
-	let ( ( id FUNLIST ) ( type FUNTYPE ) ) EXPR EXPRLIST
+	@ let ( ( id type ) VARLIST )
+	# let ( ( id FUNLIST ) ( type FUNTYPE ) ) EXPR EXPRLIST
 	stdout RESR
 RESR
 	( OPER )
@@ -286,4 +286,4 @@ ASSIGNMENT_PAREN
 	cos RESR
 	tan RESR
 	! id PARAMLIST
-		~ ~ -> ~	: 1 0
+		:

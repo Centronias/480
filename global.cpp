@@ -32,7 +32,7 @@ int
 main(int	argc,
 	 char**	argv)
 {
-	srand(time(NULL));
+	srand((UINT) time(NULL));
 
 	Global::run(argc, argv);
 	Global::succeed();
@@ -53,11 +53,18 @@ Global::run(int		argc,
 	*grammar	= '\0';
 
 	Global::readCmdLine(argc, argv, input, grammar);
+#ifdef NOT_ENGR
+    strcpy(input, "stutest2.in");
+    strcpy(grammar, "mod.grammar");
+#endif
 
 	printf("\n////////////////////////////////////////////////////////////\n");
 	printf("\tRunning compiler");
 	if (*input)
 		printf(" on \"%s\"", input);
+#ifdef NOT_ENGR
+	printf("\n\nThis version was made for Windows and\ntherefore ignores input parameters!\n");
+#endif
 	if (m_debug)
 		printf("\n\tDebugging on");
 	if (m_dumpFSA)
@@ -94,6 +101,7 @@ Global::readCmdLine(int		argc,
 				   char*	inFile,
 				   char*	grammarFile)
 {
+#ifndef NOT_ENGR
 	opterr = 0;
 
 	char c;
@@ -138,6 +146,7 @@ Global::readCmdLine(int		argc,
 
 	if (!(m_dumpFSA || m_dumpGrammar || m_generateTree))
 		strncpy(inFile, argv[optind], PATH_MAX);
+#endif
 }
 
 
@@ -151,6 +160,10 @@ Global::fail()
 	printf("\n\n////////////////////////////////////////////////////////////\n");
 	printf("\tEncountered error, exiting.\n");
 	printf("////////////////////////////////////////////////////////////\n");
+#ifdef NOT_ENGR
+	char hack;
+	fscanf(stdin, "%c", &hack);
+#endif
 	exit(EXIT_FAILURE);
 }
 

@@ -36,10 +36,9 @@ struct PoUnit {
 							PoUnit(const comString&	keyword);
 							PoUnit(UINT	index);
 
-	union {
-		const comString		m_keyword;
-		const UINT			m_index;
-	};
+	
+	const comString		    m_keyword;
+	const UINT			    m_index;
 
 	const bool				m_isKeyword;
 };

@@ -76,6 +76,7 @@ Translator::run()
 	printf("Running translator.\n");
 	FILE*	output = fopen("translated.forth", "w");
 	VarDef::printVarDefHeader(output);
+	FuncDef::printFuncDefHeader(output);
 	fprintf(output, ": main\n");
 	run(Parser::m_tree, output);
 	fprintf(output, "\n; main");
@@ -87,6 +88,12 @@ void
 Translator::run(ParseTree*	tree,
 				FILE*		output)
 {
+	// If this node is a function invocation, we need to assign parameters.
+	if (!tree->isTerminal() && tree->m_production->isFuncInvocation()) {
+		translateFuncInvocation(tree, output);
+		return;
+	}
+
 	// If this node does not have a scheme...
 	if (!tree->getScheme()) {
 		// ... and it's a terminal, just print it.
@@ -192,7 +199,8 @@ Translator::getPrimType(const comString&	spelling)
 // Translator::buildFunction()
 // ****************************************************************************
 void
-Translator::buildFunction(ParseTree*	tree)
+Translator::buildFunction(ParseTree*	tree,
+						  UINT&			lastLine)
 {	
 	// Admittedly a hack.
 	tree->forceScopeEdge();
@@ -202,7 +210,10 @@ Translator::buildFunction(ParseTree*	tree)
 	// Immediately create a function definition.
 	const comString&	fId		= tree->getChild(3)->getToken()->getSpelling();
 	Translator::Type	type	= Translator::getPrimType(tree->getChild(7)->getToken()->getSpelling());
-	FuncDef*	def = new FuncDef(fId, type, tree);
+	char				prefix[64];
+	sprintf(prefix, "f%p_%s", tree, (const char*) fId);
+	FuncDef*	def = new FuncDef(fId, prefix, type, tree);
+	tree->addFuncDef(def);
 
 	// Look for parameters.
 	const comString*	identifier;
@@ -211,9 +222,7 @@ Translator::buildFunction(ParseTree*	tree)
 	ParseTree*			tRec = tree->getChild(8);
 	bool				foundIdentifier	= false;
 	bool				foundType		= false;
-	char				prefix[64];
 	char				postName[64];
-	sprintf(prefix, "%p_%s_", tree, (const char*) fId);
 
 	while (true) {
 		foundIdentifier	= false;
@@ -239,7 +248,7 @@ Translator::buildFunction(ParseTree*	tree)
 
 		if (foundType && foundIdentifier) {
 			// We got a type and an identifier. Make them into a parameter.
-			sprintf(postName, "%s%s", prefix + 1, (const char*) *identifier);
+			sprintf(postName, "p%s_%s", prefix, (const char*) *identifier);
 			vDef = new VarDef(*identifier, postName, type);
 			tree->forceVarDef(vDef);
 			def->m_params.append(vDef);
@@ -252,4 +261,125 @@ Translator::buildFunction(ParseTree*	tree)
 			break;
 		}
 	}
+
+	// Now that we've made the declaration. Let's typecheck the definition
+	// itself.
+	tree->getChild(11)->typeCheck(lastLine);
+	tree->getChild(12)->typeCheck(lastLine);
+}
+
+
+
+// ****************************************************************************
+// Translator::typeCheckFunction()
+// ****************************************************************************
+void
+Translator::typeCheckFunction(ParseTree*	tree,
+							  UINT&			lastLine)
+{
+	// Find the function definition. This node looks like
+	//	id PARAMLIST
+	// So the first child will be the function's identifier token.
+	FuncDef*	def = tree->findFuncDef(tree->getChild(0)->getToken()->getSpelling());
+	tree->m_type = def->m_type;
+
+	// Now that we have the definition, make sure that all of the parameters
+	// are supplied.
+	if (def) {
+		VDVec&		params = def->m_params;
+		ParseTree*	pRec = tree->getChild(1);
+		UINT		pThis = 0;
+		UINT		pNext = 1;
+
+		// The param list nodes look like
+		// <param> PARAMLIST
+		// Use the automatic typechecker for the parameter and then loop on the
+		// PARAMLIST
+		for (UINT i = 0; i < params.getNumEntries(); i++) {
+			if (!pRec) {
+				fprintf(stderr, "Call to function \"%s\" on line %d has too few parameters.\n",
+						(const char*) tree->getChild(0)->getToken()->getSpelling(),
+						tree->getChild(0)->getToken()->getLine());
+				Global::fail();
+			}
+			
+			// It is possible that the first token is ( in the production
+			//	( OPER ) PARAMLIST
+			// If this is the case, just typecheck on the next token.
+			if (pRec->getChild(0)->getToken()->getType() == Token::Paren) {
+				pThis = 1;
+				pNext = 3;
+			}
+
+			pRec->getChild(pThis)->typeCheck(lastLine);
+			
+			if (pRec->getChild(pThis)->m_type != params[i]->m_type) {
+				fprintf(stderr, "Parameter \"%s\" (%d) for call to function \"%s\" on line %d failed typecheck. Got %s, expected %s\n",
+						(const char*) params[i]->m_preName,
+						i,
+						(const char*) tree->getChild(pThis)->getToken()->getSpelling(),
+						tree->getChild(pThis)->getToken()->getLine(),
+						(const char*) typeToString(pRec->getChild(pThis)->m_type),
+						(const char*) typeToString(params[i]->m_type));
+				Global::fail();
+			}
+
+			pRec = pRec->getChild(pNext);
+		}
+	} else {
+		fprintf(stderr, "Attempted to call undeclared function \"%s\" on line %d.\n",
+				(const char*) tree->getChild(0)->getToken()->getSpelling(),
+				tree->getChild(0)->getToken()->getLine());
+		Global::fail();
+	}
+}
+
+
+
+// ****************************************************************************
+// Translator::translateFuncInvocation()
+// ****************************************************************************
+void
+Translator::translateFuncInvocation(ParseTree*	tree,
+									FILE*		output)
+{
+	FuncDef*	def = tree->findFuncDef(tree->getChild(0)->getToken()->getSpelling());
+	VDVec&		params = def->m_params;
+	ParseTree*	pRec = tree->getChild(1);
+	UINT		pThis = 0;
+	UINT		pNext = 1;
+
+	// The param list nodes look like
+	// <param> PARAMLIST
+	// Use the automatic translator to translate the first param, then print
+	// the post-translation identifier and then finally print the assignment
+	// operator appropriate for the type.
+	for (UINT i = 0; i < params.getNumEntries(); i++) {
+		// It is possible that the first token is ( in the production
+		//	( OPER ) PARAMLIST
+		// If this is the case, just typecheck on the next token.
+		if (pRec->getChild(0)->getToken()->getType() == Token::Paren) {
+			pThis = 1;
+			pNext = 3;
+		}
+
+		run(pRec->getChild(pThis), output);
+		fprintf(output, "%s ", (const char*) params[i]->m_postName);
+		switch (params[i]->m_type) {
+		  case Translator::Bool:
+		  case Translator::Int:
+			fprintf(output, "! ");
+			break;
+		  case Translator::Str:
+			fprintf(output, "2! ");
+			break;
+		  case Translator::Float:
+			fprintf(output, "f! ");
+			break;
+		}
+
+		pRec = pRec->getChild(pNext);
+	}
+
+	fprintf(output, "%s ", (const char*) def->m_postName);
 }

@@ -316,7 +316,7 @@ ParseTree::typeCheck(UINT&	lastLine)
 {
 	if (m_numChildren) {
 		// If this node is a regular node, just recurse into the children.
-		if (!m_production->isDeclarator() && !m_production->isFuncDeclarator()) {
+		if (!m_production->isDeclarator() && !m_production->isFuncDeclarator() && !m_production->isFuncInvocation()) {
 			for (UINT i = 0; i < m_numChildren; i++)
 				m_children[i]->typeCheck(lastLine);
 		} else if (m_production->isDeclarator()) {
@@ -346,13 +346,12 @@ ParseTree::typeCheck(UINT&	lastLine)
 		} else if (m_production->isFuncDeclarator()) {
 			// If this is a function declarator, perform special declarator
 			// processing to add the new variable's declaration.
-			Translator::buildFunction(this);
+			Translator::buildFunction(this, lastLine);
 			return;
-		}
-
-		// If this is a function invokation, do not try to checke the types manually.
-		if (m_production->isFuncInvocation()) {
-
+		} else if (m_production->isFuncInvocation()) {
+			// If this is a function invokation, do not try to check the types automatically.
+            Translator::typeCheckFunction(this, lastLine);
+			return;
 		}
 
 		for (UINT i = 0; i < m_production->getTransSchemes().getNumEntries(); i++) {
@@ -412,7 +411,9 @@ ParseTree::typeCheck(UINT&	lastLine)
 					if (vd) {
 						m_type = vd->m_type;
 					} else {
-						fprintf(stderr, "Identifier \"%s\" on line \"%d\" not declared in this scope.\n", (const char*) m_token->getSpelling(), m_token->getLine());
+						fprintf(stderr, "Identifier \"%s\" on line %d not declared in this scope.\n",
+							(const char*) m_token->getSpelling(),
+							m_token->getLine());
 						Global::fail();
 					}
 				}
@@ -461,7 +462,10 @@ Production::~Production()
 bool
 Production::matches(Production*	o)
 {
-	if (o->getNumEntries() != getNumEntries())
+	if (o->getNumEntries() != getNumEntries()
+		|| o->m_declarator != m_declarator
+		|| o->m_fDeclarator != m_fDeclarator
+		|| o->m_funcInv != m_funcInv)
 		return false;
 
 	for (UINT i = 0; i < getNumEntries(); i++) {
@@ -519,15 +523,14 @@ ParseTree::addVarDef(const comString&	identifier,
 			// appending the pretranslation identifier to it. This should give us an
 			// identifier that looks something like "x034841829_identifierName"
 			char	buf[128];
-			sprintf(buf, "%p_%s", this, (const char*) identifier);
-			comString	post(buf + 1);
+			sprintf(buf, "v%p_%s", this, (const char*) identifier);
 
-			m_varDefs.append(new VarDef(identifier, post, type));
+			m_varDefs.append(new VarDef(identifier, buf, type));
 		} else {
 			m_parent->addVarDef(identifier, type, true);
 		}
 	} else {
-		m_parent->addVarDef(identifier, type);
+		m_parent->addVarDef(identifier, type, found);
 	}
 }
 
@@ -592,7 +595,7 @@ VarDef::printVarDefHeader(FILE*	file)
 			break;
 		}
 
-		fprintf(file, "%s %s ", (const char*) decl, (const char*) def->m_postName);
+		fprintf(file, "\n%s %s", (const char*) decl, (const char*) def->m_postName);
 	}
 }
 
@@ -601,12 +604,100 @@ VarDef::printVarDefHeader(FILE*	file)
 // ****************************************************************************
 // FuncDef::FuncDef()
 // ****************************************************************************
-FuncDef::FuncDef(const comString&	identifier,
+FuncDef::FuncDef(const comString&	rName,
+				 const comString&	oName,
 				 Translator::Type	type,
 				 ParseTree*			tree)
-:	m_identifier(identifier),
+:	m_preName(rName),
+	m_postName(oName),
 	m_type(type),
 	m_definition(tree)
 {
 	m_funcDefs.append(this);
+}
+
+
+
+// ****************************************************************************
+// ParseTree::addFuncDef()
+// ****************************************************************************
+void
+ParseTree::addFuncDef(FuncDef*	def,
+					  bool		found)
+{
+	// If the production associated with this node of the parse tree is a scope
+	// edge, this node can hold the Func def. Otherwise pass it on up to the
+	// parent.
+	if (m_scopeEdge) {
+		// If this is the first edge found, ignore it and go to the next one.
+		// We do this because let statements are themselves in scope edges and
+		// therefore require this hack to make it so declarations exist outside
+		// the let statements.
+		if (found) {
+			m_funcDefs.append(def);
+		} else {
+			m_parent->addFuncDef(def, true);
+		}
+	} else {
+		m_parent->addFuncDef(def, found);
+	}
+}
+
+
+
+// ****************************************************************************
+// ParseTree::findFuncDef()
+// ****************************************************************************
+FuncDef*
+ParseTree::findFuncDef(const comString&	identifier)
+{
+	// If the production associated with this node of the parse tree is a scope
+	// edge, this node may have the Func def. If this is not found here or this
+	// node is not a scope edge, ask the parent node for the definition.
+	if (m_scopeEdge) {
+		FuncDef*	ret = NULL;
+		for (UINT i = 0; i < m_funcDefs.getNumEntries(); i++) {
+			if (m_funcDefs[i]->m_preName == identifier) {
+				ret = m_funcDefs[i];
+				break;
+			}
+		}
+
+		if (ret)
+			return ret;
+	}
+
+	// If this node has no parent, indicate that there is no definition.
+	if (!m_parent)
+		return NULL;
+	
+	return m_parent->findFuncDef(identifier);
+}
+
+
+
+// ****************************************************************************
+// FuncDef::printFuncDefHeader()
+// ****************************************************************************
+void
+FuncDef::printFuncDefHeader(FILE*	file)
+{
+	FuncDef*		def = NULL;
+	for (UINT i = 0; i < m_funcDefs.getNumEntries(); i++) {
+		def = m_funcDefs[i];
+
+		// Function definition's definition pointers point to productions that
+		// look like
+		//	let ( ( id FUNLIST ) ( type FUNTYPE ) ) EXPR EXPRLIST
+		// So the last and second to last nodes under this one will be the
+		// actual definition.
+		fprintf(file, "\n: %s ", (const char*) def->m_postName);
+		
+		Translator::run(def->m_definition->getChild(11), file);
+		Translator::run(def->m_definition->getChild(12), file);
+
+		fprintf(file, "; ");
+	}
+
+	fprintf(file, "\n");
 }

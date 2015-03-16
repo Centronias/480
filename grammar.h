@@ -138,6 +138,10 @@ class ParseTree {
 								  bool				found = false);
 	VarDef*				findVarDef(const comString&	identifier);
 
+	void				addFuncDef(FuncDef*	def,
+								   bool		found = false);
+	FuncDef*			findFuncDef(const comString&	identifier);
+
 	bool				isTerminal()	{return m_prodEle.m_isTerm;}
 	Terminal*			getTerminal()	{return m_prodEle.m_term;}
 	NonTerm*			getNonTerm()	{return m_prodEle.m_nonTerm;}
@@ -149,7 +153,7 @@ class ParseTree {
 
 	void				forceScopeEdge()	{m_scopeEdge = true;}
 	void				forceVarDef(VarDef*	def)	{m_varDefs.append(def);}
-
+	
   private:
 	void				print(UINT	level,
 							  FILE*	file);
@@ -165,6 +169,9 @@ class ParseTree {
 	TransScheme*		m_scheme;
 	bool				m_scopeEdge;
 	VDVec				m_varDefs;
+	FDVec				m_funcDefs;
+
+friend class Translator;
 };
 
 
@@ -194,13 +201,15 @@ class VarDef {
 // ****************************************************************************
 class FuncDef {
   public:
-						FuncDef(const comString&	name,
+						FuncDef(const comString&	rName,
+								const comString&	oName,
 								Translator::Type	type,
 								ParseTree*			tree);
 
 	static void			printFuncDefHeader(FILE*	file);
-
-	const comString			m_identifier;
+	
+	const comString			m_preName;
+	const comString			m_postName;
 	const Translator::Type	m_type;
 	VDVec					m_params;
 	ParseTree*				m_definition;

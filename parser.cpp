@@ -436,7 +436,7 @@ Parser::buildGrammar(const comString&	filename)
 				}
 
 				Production*	prod	= new Production;
-				char		buf[16];
+				char		buf[64];
 				char*		bLoc	= buf;
 
 				// Read out production elements seperated by single spaces and add

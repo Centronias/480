@@ -7,6 +7,13 @@
 // ****************************************************************************
 
 
+// ****************************************************************************
+// Handy Define so I can move code between Fl(i/o)p and Windows
+// ****************************************************************************
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#define NOT_ENGR
+#endif
+
 
 // ****************************************************************************
 // External Includes
@@ -14,8 +21,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
+#ifndef NOT_ENGR
 #include <unistd.h>
-#include </usr/include/ctype.h>
+#endif
+#include <ctype.h>
 #include <stdlib.h>
 #include <time.h>
 #include <stdlib.h>
@@ -29,6 +38,10 @@
 #define BYTE	unsigned char
 
 #define PT_MAX_CHILDREN	13
+
+#ifdef NOT_ENGR
+#define PATH_MAX _MAX_PATH
+#endif
 
 
 
